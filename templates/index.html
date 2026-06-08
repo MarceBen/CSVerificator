@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CSVerificator – Validador CSV</title>
+
+  <!-- Google Fonts: Syne (display) + JetBrains Mono (código) -->
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
+
+  <style>
+    /* ===== VARIABLES DE COLOR Y TEMA ===== */
+    :root {
+      --bg:        #0a0d14;          /* fondo principal casi negro */
+      --surface:   #111622;          /* tarjetas / paneles */
+      --surface2:  #1a2035;          /* bordes y subtarjetas */
+      --accent:    #3b82f6;          /* azul principal */
+      --accent2:   #6366f1;          /* índigo secundario */
+      --success:   #10b981;          /* verde → sin errores */
+      --warning:   #f59e0b;          /* amarillo → advertencia */
+      --danger:    #ef4444;          /* rojo → error */
+      --text:      #e2e8f0;          /* texto principal */
+      --muted:     #64748b;          /* texto apagado */
+      --border:    #1e2d47;          /* borde de paneles */
+      --token-bg:  #0f172a;          /* fondo de badge de token */
+    }
+
+    /* ===== RESET Y BASE ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Syne', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Fondo con cuadrícula sutil para dar sensación "técnica" */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(59,130,246,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(59,130,246,0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+
+    /* ===== HEADER ===== */
+    header {
+      padding: 2rem 2.5rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10,13,20,0.85);
+    }
+
+    .logo-icon {
+      /* Pequeño cuadrado de acento que actúa como ícono */
+      width: 38px; height: 38px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem; font-weight: 700; color: white;
+    }
+
+    header h1 {
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    header h1 span { color: var(--accent); }
+
+    .badge-curso {
+      margin-left: auto;
+      font-size: 0.7rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 0.3rem 0.6rem;
+      border-radius: 4px;
+    }
+
+    /* ===== LAYOUT PRINCIPAL ===== */
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    /* ===== PANEL / CARD GENÉRICO ===== */
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.8rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .panel-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .panel-body { padding: 1.5rem; }
+
+    /* ===== FORMULARIO ===== */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.2rem;
+    }
+
+    @media (max-width: 640px) {
+      .form-grid { grid-template-columns: 1fr; }
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .form-group label {
+      font-size: 0.78rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    /* Zona de arrastrar y soltar archivo */
+    .drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: 10px;
+      padding: 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      position: relative;
+    }
+
+    .drop-zone:hover, .drop-zone.drag-over {
+      border-color: var(--accent);
+      background: rgba(59,130,246,0.05);
+    }
+
+    .drop-zone input[type="file"] {
+      /* Ocultamos el input feo y usamos el div como botón */
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%;
+    }
+
+    .drop-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+
+    .drop-zone p {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .drop-zone .file-name {
+      margin-top: 0.5rem;
+      font-size: 0.82rem;
+      color: var(--accent);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Input de texto */
+    input[type="text"] {
+      background: var(--token-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      width: 100%;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    /* Checkbox estilizado */
+    .check-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .check-row input[type="checkbox"] {
+      width: 16px; height: 16px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    /* Botón principal */
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: white;
+      border: none;
+      padding: 0.8rem 2rem;
+      border-radius: 8px;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    /* ===== SPINNER DE CARGA ===== */
+    .spinner {
+      display: none;
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ===== RESUMEN / TARJETAS DE ESTADÍSTICAS ===== */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+      background: var(--token-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+    }
+
+    .stat-label {
+      font-size: 0.7rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.4rem;
+    }
+
+    .stat-value {
+      font-size: 1.8rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .stat-value.ok    { color: var(--success); }
+    .stat-value.err   { color: var(--danger); }
+    .stat-value.warn  { color: var(--warning); }
+    .stat-value.info  { color: var(--accent); }
+
+    /* ===== TABLA DE RESULTADOS LÉXICOS ===== */
+    .results-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .results-table th {
+      text-align: left;
+      padding: 0.6rem 0.8rem;
+      color: var(--muted);
+      font-size: 0.7rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .results-table td {
+      padding: 0.5rem 0.8rem;
+      border-bottom: 1px solid rgba(30,45,71,0.5);
+      vertical-align: top;
+    }
+
+    /* Fila con error léxico → tinte rojo */
+    .results-table tr.has-error td { background: rgba(239,68,68,0.05); }
+
+    .fila-num {
+      color: var(--muted);
+      font-size: 0.7rem;
+    }
+
+    /* ===== BADGES DE TOKEN ===== */
+    .cell-list { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+
+    .cell-badge {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      background: var(--token-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.25rem 0.5rem;
+      font-size: 0.72rem;
+    }
+
+    .cell-badge.invalid {
+      border-color: var(--danger);
+      background: rgba(239,68,68,0.08);
+    }
+
+    .cell-valor { color: var(--text); }
+    .cell-token { font-size: 0.6rem; letter-spacing: 0.05em; }
+
+    /* Colores por tipo de token */
+    .token-INTEGER { color: #60a5fa; }
+    .token-FLOAT   { color: #818cf8; }
+    .token-DATE    { color: #34d399; }
+    .token-EMAIL   { color: #fb923c; }
+    .token-STRING  { color: #a3e635; }
+    .token-EMPTY   { color: var(--warning); }
+    .token-INVALID { color: var(--danger); font-weight: 700; }
+
+    /* ===== ERRORES ===== */
+    .error-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .error-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      background: rgba(239,68,68,0.07);
+      border-left: 3px solid var(--danger);
+      border-radius: 0 6px 6px 0;
+      padding: 0.5rem 0.8rem;
+      font-size: 0.8rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: #fca5a5;
+    }
+
+    .error-icon { flex-shrink: 0; }
+
+    /* ===== BLOQUE SQL ===== */
+    .sql-block {
+      background: var(--token-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.2rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      line-height: 1.8;
+      color: #94a3b8;
+      white-space: pre-wrap;
+      max-height: 350px;
+      overflow-y: auto;
+    }
+
+    /* Resaltado de palabras clave SQL */
+    .sql-kw   { color: #818cf8; font-weight: 700; }
+    .sql-tbl  { color: #60a5fa; }
+    .sql-val  { color: #34d399; }
+
+    .btn-copy {
+      margin-top: 0.8rem;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-family: 'JetBrains Mono', monospace;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-copy:hover { background: var(--border); }
+
+    /* ===== LEYENDA DE TOKENS ===== */
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.7rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* ===== ESTADO INICIAL (sin resultados aún) ===== */
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: var(--muted);
+    }
+
+    .empty-state .big-icon { font-size: 3rem; margin-bottom: 1rem; }
+    .empty-state p { font-size: 0.88rem; }
+
+    /* ===== SECCIÓN OCULTA ===== */
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <!-- ── ENCABEZADO ── -->
+  <header>
+    <div class="logo-icon">CSV</div>
+    <h1>CS<span>Verificator</span></h1>
+    <div class="badge-curso">Teoría de Computación · USIL 2026</div>
+  </header>
+
+  <!-- ── CONTENIDO PRINCIPAL ── -->
+  <main>
+
+    <!-- PANEL: FORMULARIO DE CARGA -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-dot"></div>
+        Cargar archivo CSV
+      </div>
+      <div class="panel-body">
+        <div class="form-grid">
+
+          <!-- Zona de arrastrar archivo -->
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label>Archivo CSV</label>
+            <div class="drop-zone" id="dropZone">
+              <input type="file" id="archivoInput" accept=".csv,.txt" />
+              <div class="drop-icon">📂</div>
+              <p>Arrastra tu archivo CSV aquí o haz clic para seleccionarlo</p>
+              <div class="file-name" id="fileName">Ningún archivo seleccionado</div>
+            </div>
+          </div>
+
+          <!-- Nombre de tabla SQL -->
+          <div class="form-group">
+            <label>Nombre de tabla SQL (opcional)</label>
+            <input type="text" id="tablaNombre" placeholder="ej: empleados, ventas, usuarios" />
+          </div>
+
+          <!-- Opción: generar SQL -->
+          <div class="form-group" style="justify-content: flex-end;">
+            <label class="check-row">
+              <input type="checkbox" id="generarSQL" />
+              Generar sentencias SQL INSERT
+            </label>
+          </div>
+
+        </div>
+
+        <!-- Botón de analizar -->
+        <div style="margin-top: 1.5rem; display: flex; gap: 1rem; align-items: center;">
+          <button class="btn-primary" id="btnAnalizar" onclick="analizar()">
+            <span>🔍</span>
+            <span>Analizar CSV</span>
+            <div class="spinner" id="spinner"></div>
+          </button>
+          <span id="msgError" style="color: var(--danger); font-size: 0.82rem; display:none;"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL: RESULTADOS (oculto hasta que se analice algo) -->
+    <div class="panel hidden" id="panelResultados">
+      <div class="panel-header">
+        <div class="panel-dot" style="background: var(--success);"></div>
+        Resultados del análisis
+      </div>
+      <div class="panel-body">
+
+        <!-- Estadísticas rápidas -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Total filas</div>
+            <div class="stat-value info" id="statTotal">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Filas válidas</div>
+            <div class="stat-value ok" id="statValidas">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Filas inválidas</div>
+            <div class="stat-value err" id="statInvalidas">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Err. léxicos</div>
+            <div class="stat-value warn" id="statLexicos">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Err. sintácticos</div>
+            <div class="stat-value warn" id="statSintacticos">0</div>
+          </div>
+        </div>
+
+        <!-- Tabla de análisis léxico por fila -->
+        <h3 style="font-size:0.85rem; color:var(--muted); margin-bottom:0.8rem; font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:0.06em;">
+          Análisis léxico por fila
+        </h3>
+        <div style="overflow-x:auto;">
+          <table class="results-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Celdas y tokens detectados</th>
+                <th>Errores léxicos</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyLexicos">
+              <!-- Se llena con JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Leyenda de colores de tokens -->
+      <div class="legend">
+        <span style="font-size:0.7rem; color:var(--muted); font-family:'JetBrains Mono',monospace; margin-right:0.3rem;">TOKENS:</span>
+        <span class="legend-item"><span class="token-INTEGER">■</span> INTEGER</span>
+        <span class="legend-item"><span class="token-FLOAT">■</span> FLOAT</span>
+        <span class="legend-item"><span class="token-DATE">■</span> DATE</span>
+        <span class="legend-item"><span class="token-EMAIL">■</span> EMAIL</span>
+        <span class="legend-item"><span class="token-STRING">■</span> STRING</span>
+        <span class="legend-item"><span class="token-EMPTY">■</span> EMPTY</span>
+        <span class="legend-item"><span class="token-INVALID">■</span> INVALID</span>
+      </div>
+    </div>
+
+    <!-- PANEL: ERRORES SINTÁCTICOS -->
+    <div class="panel hidden" id="panelSintacticos">
+      <div class="panel-header">
+        <div class="panel-dot" style="background: var(--danger);"></div>
+        Errores sintácticos detectados
+      </div>
+      <div class="panel-body">
+        <div class="error-list" id="listaSintacticos"></div>
+      </div>
+    </div>
+
+    <!-- PANEL: SQL GENERADO -->
+    <div class="panel hidden" id="panelSQL">
+      <div class="panel-header">
+        <div class="panel-dot" style="background: var(--accent2);"></div>
+        Sentencias SQL generadas
+      </div>
+      <div class="panel-body">
+        <p style="font-size:0.82rem; color:var(--muted); margin-bottom:1rem;">
+          Solo se generan INSERT para las filas <strong style="color:var(--success);">sin errores</strong>.
+          Las filas inválidas son omitidas automáticamente.
+        </p>
+        <div class="sql-block" id="sqlBlock"></div>
+        <button class="btn-copy" onclick="copiarSQL()">📋 Copiar SQL</button>
+      </div>
+    </div>
+
+    <!-- Estado inicial vacío -->
+    <div class="empty-state" id="emptyState">
+      <div class="big-icon">📋</div>
+      <p>Sube un archivo CSV y presiona <strong>Analizar</strong> para ver los resultados aquí.</p>
+    </div>
+
+  </main>
+
+
+  <!-- ── JAVASCRIPT (lógica del frontend) ── -->
+  <script>
+    // ─── Actualizar nombre de archivo cuando el usuario lo selecciona ───
+    document.getElementById("archivoInput").addEventListener("change", function () {
+      const nombre = this.files[0]?.name || "Ningún archivo seleccionado";
+      document.getElementById("fileName").textContent = nombre;
+    });
+
+    // ─── Efectos visuales de arrastrar archivo ───
+    const dropZone = document.getElementById("dropZone");
+
+    dropZone.addEventListener("dragover", (e) => {
+      e.preventDefault();  // Necesario para que el drop funcione
+      dropZone.classList.add("drag-over");
+    });
+
+    dropZone.addEventListener("dragleave", () => {
+      dropZone.classList.remove("drag-over");
+    });
+
+    dropZone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropZone.classList.remove("drag-over");
+      // Asignamos el archivo arrastrado al input oculto
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        document.getElementById("archivoInput").files = files;
+        document.getElementById("fileName").textContent = files[0].name;
+      }
+    });
+
+
+    // ─── Función principal: envía el archivo al backend y muestra resultados ───
+    async function analizar() {
+      const inputFile = document.getElementById("archivoInput");
+      const msgError  = document.getElementById("msgError");
+      const spinner   = document.getElementById("spinner");
+      const btn       = document.getElementById("btnAnalizar");
+
+      // Ocultamos errores previos
+      msgError.style.display = "none";
+
+      // Validamos que haya un archivo seleccionado
+      if (!inputFile.files || inputFile.files.length === 0) {
+        msgError.textContent = "Por favor selecciona un archivo CSV.";
+        msgError.style.display = "inline";
+        return;
+      }
+
+      // Mostramos spinner y bloqueamos el botón
+      spinner.style.display = "block";
+      btn.disabled = true;
+
+      // Construimos el FormData con el archivo y las opciones
+      const formData = new FormData();
+      formData.append("archivo", inputFile.files[0]);
+      formData.append("tabla", document.getElementById("tablaNombre").value);
+      formData.append("generar_sql", document.getElementById("generarSQL").checked ? "true" : "false");
+
+      try {
+        // Enviamos la petición POST al endpoint /analizar de Flask
+        const response = await fetch("/analizar", {
+          method: "POST",
+          body: formData
+        });
+
+        const data = await response.json();
+
+        // Si Flask devolvió un error, lo mostramos
+        if (data.error) {
+          msgError.textContent = data.error;
+          msgError.style.display = "inline";
+          return;
+        }
+
+        // Mostramos los resultados en pantalla
+        mostrarResultados(data);
+
+      } catch (err) {
+        msgError.textContent = "Error de conexión con el servidor. Verifica que Flask esté corriendo.";
+        msgError.style.display = "inline";
+      } finally {
+        // Siempre ocultamos el spinner y habilitamos el botón
+        spinner.style.display = "none";
+        btn.disabled = false;
+      }
+    }
+
+
+    // ─── Rellena todos los paneles con los datos devueltos por Flask ───
+    function mostrarResultados(data) {
+      // Ocultamos el estado inicial vacío
+      document.getElementById("emptyState").classList.add("hidden");
+
+      // ── Estadísticas ──
+      document.getElementById("statTotal").textContent      = data.resumen.total_filas;
+      document.getElementById("statValidas").textContent    = data.resumen.filas_validas;
+      document.getElementById("statInvalidas").textContent  = data.resumen.filas_invalidas;
+      document.getElementById("statLexicos").textContent    = data.resumen.total_errores_lexicos;
+      document.getElementById("statSintacticos").textContent= data.resumen.total_errores_sintacticos;
+
+      // ── Tabla de análisis léxico ──
+      const tbody = document.getElementById("tbodyLexicos");
+      tbody.innerHTML = "";  // Limpiamos resultados anteriores
+
+      data.resultados_lexicos.forEach((fila) => {
+        const tieneError = fila.errores_lexicos.length > 0;
+        const tr = document.createElement("tr");
+        if (tieneError) tr.classList.add("has-error");
+
+        // Columna: número de fila
+        tr.innerHTML += `<td class="fila-num">${fila.numero_fila}</td>`;
+
+        // Columna: badges con valor y token de cada celda
+        let celdasHTML = '<td><div class="cell-list">';
+        fila.celdas.forEach(celda => {
+          const invalido = celda.es_error ? "invalid" : "";
+          celdasHTML += `
+            <div class="cell-badge ${invalido}">
+              <span class="cell-valor">${escaparHTML(celda.valor) || "<em>vacío</em>"}</span>
+              <span class="cell-token token-${celda.token}">${celda.token}</span>
+            </div>`;
+        });
+        celdasHTML += "</div></td>";
+        tr.innerHTML += celdasHTML;
+
+        // Columna: lista de errores léxicos de esa fila
+        let errHTML = "<td>";
+        if (tieneError) {
+          fila.errores_lexicos.forEach(e => {
+            errHTML += `<div style="color:var(--danger); font-size:0.75rem; font-family:'JetBrains Mono',monospace;">⚠ ${escaparHTML(e)}</div>`;
+          });
+        } else {
+          errHTML += `<span style="color:var(--success); font-size:0.75rem;">✓ OK</span>`;
+        }
+        errHTML += "</td>";
+        tr.innerHTML += errHTML;
+
+        tbody.appendChild(tr);
+      });
+
+      // Mostramos el panel de resultados léxicos
+      document.getElementById("panelResultados").classList.remove("hidden");
+
+      // ── Errores sintácticos ──
+      const panelSint = document.getElementById("panelSintacticos");
+      const listaSint = document.getElementById("listaSintacticos");
+      listaSint.innerHTML = "";
+
+      if (data.errores_sintacticos.length > 0) {
+        data.errores_sintacticos.forEach(err => {
+          listaSint.innerHTML += `
+            <div class="error-item">
+              <span class="error-icon">⛔</span>
+              <span>${escaparHTML(err)}</span>
+            </div>`;
+        });
+        panelSint.classList.remove("hidden");
+      } else {
+        panelSint.classList.add("hidden");
+      }
+
+      // ── SQL generado ──
+      const panelSQL = document.getElementById("panelSQL");
+      const sqlBlock = document.getElementById("sqlBlock");
+
+      if (data.sentencias_sql && data.sentencias_sql.length > 0) {
+        // Resaltamos las palabras clave SQL con spans de color
+        const sqlTexto = data.sentencias_sql.join("\n");
+        sqlBlock.innerHTML = resaltarSQL(sqlTexto);
+        panelSQL.classList.remove("hidden");
+      } else {
+        panelSQL.classList.add("hidden");
+      }
+
+      // Hacemos scroll suave hacia los resultados
+      document.getElementById("panelResultados").scrollIntoView({ behavior: "smooth" });
+    }
+
+
+    // ─── Resalta palabras clave SQL con colores ───
+    function resaltarSQL(sql) {
+      return escaparHTML(sql)
+        .replace(/\b(INSERT INTO|VALUES|NULL)\b/g, '<span class="sql-kw">$1</span>')
+        .replace(/'([^']*)'/g, "'<span class=\"sql-val\">$1</span>'");
+    }
+
+
+    // ─── Escapa caracteres HTML para evitar XSS ───
+    function escaparHTML(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+
+    // ─── Copia el SQL al portapapeles ───
+    function copiarSQL() {
+      const sqlBlock = document.getElementById("sqlBlock");
+      // Extraemos el texto plano (sin etiquetas HTML)
+      navigator.clipboard.writeText(sqlBlock.innerText).then(() => {
+        const btn = document.querySelector(".btn-copy");
+        btn.textContent = "✅ Copiado!";
+        setTimeout(() => btn.textContent = "📋 Copiar SQL", 2000);
+      });
+    }
+  </script>
+
+</body>
+</html>
