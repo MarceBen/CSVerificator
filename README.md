@@ -12,4 +12,3 @@ Aplicación web desarrollada con Flask para:
 - Python
 - Flask
 - HTML
-- JavaScript
