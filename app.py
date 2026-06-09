@@ -4,129 +4,91 @@ import re
 import os
 import io
 
-app = Flask(__name__)
+app = Flask(__name__) #inicializamos el flask.
 
-# Analisis lexico para identificacion de tokens
-def reconocer_token(valor):
+#funcion para reconocer tokens, ademas de fecha en formato americano y correo electronico.
+def reconocer_token(valor): 
  
-    valor = valor.strip()  # Quitamos espacios al inicio y al final
+    valor = valor.strip()  #usamos strip para limpiar espacios en blanco y evitar errores en el programa.
 
     if valor == "":
-        return "EMPTY"
+        return "EMPTY" #si esta vacio retornamos empty, posteriormente en la generacion sql pasara como null
 
-    # Número entero: solo dígitos
-    elif re.fullmatch(r'\d+', valor): 
+   
+    elif re.fullmatch(r'\d+', valor):  #usamos full match de regex para que retorne INTEGER(entero) si cumple con la condicion de un numero de mas de un digito
         return "INTEGER"
 
-    # Número decimal: dígitos, punto, más dígitos
-    elif re.fullmatch(r'\d+\.\d+', valor):
+    
+    elif re.fullmatch(r'\d+\.\d+', valor): # aqui lo mismo pero en decimales
         return "FLOAT"
 
-    # Fecha ISO: AAAA-MM-DD
-    elif re.fullmatch(r'\d{4}-\d{2}-\d{2}', valor):
+    
+    elif re.fullmatch(r'\d{4}-\d{2}-\d{2}', valor): # aqui lo mismo pero en fechas, 4 numeros para año, 2 para meses y 2 para dias.
         return "DATE"
 
-    # Correo electrónico básico
-    elif re.fullmatch(r'[\w.\-+]+@[\w.\-]+\.[a-zA-Z]{2,}', valor):
+    
+    elif re.fullmatch(r'[\w.\-+]+@[\w.\-]+\.[a-zA-Z]{2,}', valor): #exigimos arroba y 2 letras para el dominio como minimo
         return "EMAIL"
 
-    # Texto con letras, tildes, espacios y algunos símbolos comunes
-    elif re.fullmatch(r'[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9 _\-\.]+', valor):
+    
+    elif re.fullmatch(r'[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9 _\-\.]+', valor): #aqui consideramos un string cualquier caracter de esa lista xD
         return "STRING"
 
-    else:
-        return "INVALID"
+    else: 
+        return "INVALID" #si no cumple con nada, invalidamos.
 
 
-#  Recorre todas las filas del CSV y clasifica cada celda con su token.
-#  Retorna una lista de resultados por fila con errores léxicos marcados.
-def analizar_lexico(filas):
+# recorremos las filas del csv para verificar sus tokens
+def analizar_lexico(filas): #filas del csv
     
-    resultados = []
+    resultados = [] #aqui almacenamos los resultados.
 
-    for numero_fila, fila in enumerate(filas, start=1):
-        celdas = []
-        errores_lexicos = []
+    for numeroFila, fila in enumerate(filas, start=1): #iteramos desde el 1 para facilitar lectura y no empezar de 0 xD
+        celdas = [] #por cada fila creamos una lista de celdas
+        errores_lexicos = [] #por cada fila creamos una lista de errores
 
-        for col_idx, valor in enumerate(fila):
-            token = reconocer_token(valor)
-            celdas.append({
-                "valor": valor,
-                "token": token,
-                "es_error": token == "INVALID"  # Marcamos si es inválido
-            })
+        for indexColumn, valor in enumerate(fila): #recorremos las columnas de la fila actual
+
+            token = reconocer_token(valor) #reconocemos el token de la celda
+            celdas.append({"valor": valor,"token": token,"es_error": token == "INVALID" }) #agregamos a la lista de celdas el token que reconocio
+
             if token == "INVALID":
-                errores_lexicos.append(
-                    f"Columna {col_idx + 1}: valor '{valor}' no reconocido"
-                )
 
-        resultados.append({
-            "numero_fila": numero_fila,
-            "celdas": celdas,
-            "errores_lexicos": errores_lexicos
-        })
+                errores_lexicos.append(f"Columna {indexColumn + 1}: valor '{valor}' no reconocido") # si el token es invalido lo metemos a la lista de errores
+
+        resultados.append({"numero_fila": numeroFila,"celdas": celdas,"errores_lexicos": errores_lexicos}) #agregamos la lista de celdas y errores a la lista de resultados
 
     return resultados
 
-
-
-#  ANÁLISIS SINTÁCTICO
-#  Verificamos que todas las filas tengan la misma cantidad
-#  de columnas que la cabecera (primera fila = encabezado).
-
-#  Esto es como una "gramática": cada fila debe seguir la
-#  estructura  →  campo, campo, campo, ... (N campos fijos)
-
-
+#verificamos la estructura principal del csv, si tiene el mismo numero de columnas que el encabezado
 def analizar_sintactico(encabezado, filas_datos):
-    """
-    Compara el número de columnas de cada fila con el encabezado.
-    Si una fila tiene más o menos columnas → ERROR SINTÁCTICO.
-    Retorna lista de errores sintácticos encontrados.
-    """
-    n_esperado = len(encabezado)  # Cuántas columnas debería tener cada fila
-    errores = []
 
-    for numero_fila, fila in enumerate(filas_datos, start=2):  # empieza en 2 porque la fila 1 es el header
-        n_actual = len(fila)
-        if n_actual != n_esperado:
-            errores.append({
-                "fila": numero_fila,
-                "esperado": n_esperado,
-                "encontrado": n_actual,
-                "mensaje": (
-                    f"Fila {numero_fila}: se esperaban {n_esperado} columnas "
-                    f"pero se encontraron {n_actual}"
-                )
-            })
+    n_esperado = len(encabezado)  # Cuántas columnas debería tener cada fila
+    errores = [] # creamos una lista de errores
+
+    for numero_fila, fila in enumerate(filas_datos, start=2):  # comenzamos desde el 2 para mejorar mensaje de errores.
+        n_actual = len(fila) # cuantas columnas tiene la fila
+        if n_actual != n_esperado: # si no tiene el mismo numero de columnas que el encabezado
+            errores.append({"fila": numero_fila,"esperado": n_esperado,"encontrado": n_actual,"mensaje": (f"Fila {numero_fila}: se esperaban {n_esperado} columnas "f"pero se encontraron {n_actual}")})
 
     return errores
 
 
 
 #  GENERACIÓN DE SQL
-#  Tomamos las filas válidas (sin errores léxicos ni sintácticos)
-#  y las convertimos en sentencias SQL tipo INSERT INTO ...
+
 
 
 def generar_sql(tabla, encabezado, filas_datos, filas_invalidas_idx):
-    """
-    Genera sentencias SQL INSERT para cada fila válida del CSV.
-
-    Parámetros:
-      tabla           → nombre de la tabla SQL destino
-      encabezado      → lista de nombres de columnas
-      filas_datos     → lista de filas (listas de strings)
-      filas_invalidas_idx → índices de filas que tienen errores (se omiten)
-    """
+ 
     sentencias = []
 
     # Construimos la parte fija: INSERT INTO tabla (col1, col2, ...)
     columnas = ", ".join(encabezado)
 
-    for idx, fila in enumerate(filas_datos):
+    for i, fila in enumerate(filas_datos):
         # Si esta fila tiene errores, la saltamos
-        if idx in filas_invalidas_idx:
+        if i in filas_invalidas_idx:
             continue
 
         # Si la fila no tiene el número correcto de columnas, también se salta
@@ -143,7 +105,7 @@ def generar_sql(tabla, encabezado, filas_datos, filas_invalidas_idx):
             if token in ("INTEGER", "FLOAT"):
                 valores.append(valor)
             elif token == "EMPTY":
-                valores.append("NULL")  # Celda vacía → NULL en SQL
+                valores.append("NULL")  # Celda vacía  NULL en SQL
             else:
                 # Escapamos comillas simples dentro del texto para evitar errores SQL
                 valor_seguro = valor.replace("'", "''")
@@ -162,16 +124,11 @@ def generar_sql(tabla, encabezado, filas_datos, filas_invalidas_idx):
 
 @app.route("/")
 def index():
-    """Página principal: muestra el formulario para subir el CSV."""
     return render_template("index.html")
 
 
 @app.route("/analizar", methods=["POST"])
 def analizar():
-    """
-    Recibe el archivo CSV subido por el usuario, lo analiza
-    y devuelve los resultados en formato JSON para mostrarlos en la web.
-    """
 
     # Verificamos que el usuario haya enviado un archivo
     if "archivo" not in request.files:
