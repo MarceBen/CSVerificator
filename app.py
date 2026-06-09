@@ -6,11 +6,6 @@ import io
 
 app = Flask(__name__)
 
-# Carpeta donde se guardarán los CSV subidos por el usuario
-UPLOAD_FOLDER = "uploads"
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
-
 # Analisis lexico para identificacion de tokens
 def reconocer_token(valor):
  
@@ -20,7 +15,7 @@ def reconocer_token(valor):
         return "EMPTY"
 
     # Número entero: solo dígitos
-    elif re.fullmatch(r'\d+', valor):
+    elif re.fullmatch(r'\d+', valor): 
         return "INTEGER"
 
     # Número decimal: dígitos, punto, más dígitos
