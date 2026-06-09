@@ -168,26 +168,26 @@ def analizar():
     resultados_lexicos = analizar_lexico(filas_datos)
 
     # Recolectamos qué índices de filas tienen errores léxicos
-    filas_invalidas_idx = set()
+    filasInvalidas = set()
     for i, resultado in enumerate(resultados_lexicos):
         if resultado["errores_lexicos"]:
-            filas_invalidas_idx.add(i)
+            filasInvalidas.add(i)
 
     # --- ANÁLISIS SINTÁCTICO (revisamos la estructura de cada fila) ---
     errores_sintacticos = analizar_sintactico(encabezado, filas_datos)
 
     # Las filas con errores sintácticos también se marcan como inválidas
     for err in errores_sintacticos:
-        filas_invalidas_idx.add(err["fila"] - 2)  # -2 porque el índice empieza en 0 y fila en 2
+        filasInvalidas.add(err["fila"] - 2)  # -2 porque el índice empieza en 0 y fila en 2
 
     # --- GENERACIÓN DE SQL (solo si el usuario lo pidió) ---
     sentencias_sql = []
     if generar_sql_flag:
-        sentencias_sql = generar_sql(nombre_tabla, encabezado, filas_datos, filas_invalidas_idx)
+        sentencias_sql = generar_sql(nombre_tabla, encabezado, filas_datos, filasInvalidas)
 
     # Contamos cuántas filas son válidas e inválidas
     total_filas = len(filas_datos)
-    filas_validas = total_filas - len(filas_invalidas_idx)
+    filas_validas = total_filas - len(filasInvalidas)
     total_errores_lexicos = sum(len(r["errores_lexicos"]) for r in resultados_lexicos)
 
     # Devolvemos todo en formato JSON al frontend
@@ -199,7 +199,7 @@ def analizar():
         "resumen": {
             "total_filas": total_filas,
             "filas_validas": filas_validas,
-            "filas_invalidas": len(filas_invalidas_idx),
+            "filas_invalidas": len(filasInvalidas),
             "total_errores_lexicos": total_errores_lexicos,
             "total_errores_sintacticos": len(errores_sintacticos),
         }
@@ -209,7 +209,7 @@ def analizar():
 
 #  PUNTO DE ENTRADA
 #  Esto ejecuta el servidor cuando corremos: python app.py
-
+# ruta para render basicamente, sino no entra
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
