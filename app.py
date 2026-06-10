@@ -39,7 +39,7 @@ def analizar_lexico(filas): #filas del csv
         for indexColumn, valor in enumerate(fila): #recorremos las columnas de la fila actual
 
             token = reconocer_token(valor) #reconocemos el token de la celda
-            celdas.append({"valor": valor,"token": token,"es_error": token == "INVALID" }) #agregamos a la lista de celdas el token que reconocio
+            celdas.append({"valor": valor,"token": token,"es_error": token == "INVALID_VALUE" }) #agregamos a la lista de celdas el token que reconocio
 
             if token == "INVALID_VALUE":
 
@@ -91,9 +91,10 @@ def generar_sql(tabla, encabezado, filas_datos, filas_invalidas_idx):
             token = reconocer_token(valor)
 
             # Los números no llevan comillas, el texto sí
-            if token in ("INTEGER", "FLOAT"):
+            if token == "NUMERIC_VALUE":
                 valores.append(valor)
-            elif token == "EMPTY":
+
+            elif token == "NULL_VALUE":
                 valores.append("NULL")  # Celda vacía  NULL en SQL
             else:
                 # Escapamos comillas simples dentro del texto para evitar errores SQL
