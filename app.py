@@ -12,13 +12,13 @@ def reconocer_token(valor):
     valor = valor.strip()  # limpiamos espacios para evitar falsos errores
 
     if valor == "":
-        return "NULL_VALUE"  # celda vacía → NULL en SQL
+        return "NULL_VALUE"  # celda vacía es NULL en SQL
 
     elif re.fullmatch(r'\d{4}-\d{2}-\d{2}', valor):
         return "VALUE_DATE"  # va primero que numérico para que 2026-01-15 no se confunda
 
-    elif re.fullmatch(r'\d+(\.\d+)?', valor):  # entero Y decimal en una sola regex
-        return "NUMERIC_VALUE"  # va sin comillas en SQL
+    elif re.fullmatch(r'\d+(\.\d+)?', valor):  # entero Y decimal en una sola regex para que se considere parte de un solo token
+        return "NUMERIC_VALUE"  # va sin comillas para exportar en sql
 
     elif re.fullmatch(r'[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9 _\-\.]+', valor):
         return "TEXT_VALUE"  # va con comillas simples en SQL
