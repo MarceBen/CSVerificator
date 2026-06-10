@@ -20,8 +20,8 @@ def reconocer_token(valor):
     elif re.fullmatch(r'\d+(\.\d+)?', valor):  # entero Y decimal en una sola regex para que se considere parte de un solo token
         return "NUMERIC_VALUE"  # va sin comillas para exportar en sql
 
-    elif re.fullmatch(r'[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9 _\-\.@]+', valor):
-        return "TEXT_VALUE" # va con comillas simples en SQL
+    elif re.fullmatch(r'[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ][a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9 _\-\.@]*', valor):
+         return "TEXT_VALUE" # va con comillas simples en SQL
 
     else:
         return "INVALID_VALUE"  # dispara el error léxico, la fila no se exporta
