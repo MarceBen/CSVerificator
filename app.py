@@ -41,7 +41,7 @@ def analizar_lexico(filas): #filas del csv
             token = reconocer_token(valor) #reconocemos el token de la celda
             celdas.append({"valor": valor,"token": token,"es_error": token == "INVALID" }) #agregamos a la lista de celdas el token que reconocio
 
-            if token == "INVALID":
+            if token == "INVALID_VALUE":
 
                 errores_lexicos.append(f"Columna {indexColumn + 1}: valor '{valor}' no reconocido") # si el token es invalido lo metemos a la lista de errores
 
