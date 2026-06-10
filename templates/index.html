@@ -82,12 +82,15 @@
 
     .badge-curso {
       margin-left: auto;
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       font-family: 'JetBrains Mono', monospace;
-      color: var(--muted);
-      border: 1px solid var(--border);
-      padding: 0.3rem 0.6rem;
-      border-radius: 4px;
+      color: #ffffff;
+      background: #0ea5e9;
+      border: none;
+      padding: 0.45rem 1rem;
+      border-radius: 6px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
     }
 
     /* ===== LAYOUT PRINCIPAL ===== */
@@ -346,13 +349,11 @@
     .cell-token { font-size: 0.6rem; letter-spacing: 0.05em; }
 
     /* Colores por tipo de token */
-    .token-INTEGER { color: #60a5fa; }
-    .token-FLOAT   { color: #818cf8; }
-    .token-DATE    { color: #34d399; }
-    .token-EMAIL   { color: #fb923c; }
-    .token-STRING  { color: #a3e635; }
-    .token-EMPTY   { color: var(--warning); }
-    .token-INVALID { color: var(--danger); font-weight: 700; }
+    .token-TEXT_VALUE    { color: #a3e635; }
+    .token-NUMERIC_VALUE { color: #60a5fa; }
+    .token-VALUE_DATE    { color: #34d399; }
+    .token-NULL_VALUE    { color: var(--warning); }
+    .token-INVALID_VALUE { color: var(--danger); font-weight: 700; }
 
     /* ===== ERRORES ===== */
     .error-list {
@@ -440,6 +441,62 @@
 
     /* ===== SECCIÓN OCULTA ===== */
     .hidden { display: none !important; }
+
+    /* ===== CUADRO DE TOKENS DE REFERENCIA ===== */
+    .info-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 1.2rem;
+      align-items: start;
+    }
+
+    @media (max-width: 700px) {
+      .info-row { grid-template-columns: 1fr; }
+    }
+
+    .token-ref-box {
+      background: var(--token-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+      min-width: 220px;
+      flex-shrink: 0;
+    }
+
+    .token-ref-title {
+      font-size: 0.68rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 0.8rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.5rem;
+    }
+
+    .token-ref-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.35rem 0;
+      border-bottom: 1px solid rgba(30,45,71,0.4);
+      gap: 0.8rem;
+    }
+
+    .token-ref-row:last-child { border-bottom: none; }
+
+    .token-ref-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .token-ref-examples {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      color: var(--muted);
+      text-align: right;
+    }
   </style>
 </head>
 <body>
@@ -453,6 +510,9 @@
 
   <!-- ── CONTENIDO PRINCIPAL ── -->
   <main>
+
+    <!-- FILA: formulario + cuadro de tokens -->
+    <div class="info-row">
 
     <!-- PANEL: FORMULARIO DE CARGA -->
     <div class="panel">
@@ -501,6 +561,38 @@
         </div>
       </div>
     </div>
+
+    <!-- CUADRO: tokens que reconoce el programa -->
+    <div class="token-ref-box">
+      <div class="token-ref-title">Tokens reconocidos</div>
+
+      <div class="token-ref-row">
+        <span class="token-ref-name" style="color:#a3e635;">TEXT_VALUE</span>
+        <span class="token-ref-examples">Juan<br>Lima<br>Activo</span>
+      </div>
+
+      <div class="token-ref-row">
+        <span class="token-ref-name" style="color:#60a5fa;">NUMERIC_VALUE</span>
+        <span class="token-ref-examples">25<br>99.90<br>1500</span>
+      </div>
+
+      <div class="token-ref-row">
+        <span class="token-ref-name" style="color:#34d399;">VALUE_DATE</span>
+        <span class="token-ref-examples">2026-01-15<br>2000-07-04<br>1999-03-22</span>
+      </div>
+
+      <div class="token-ref-row">
+        <span class="token-ref-name" style="color:#f59e0b;">NULL_VALUE</span>
+        <span class="token-ref-examples">(vacío)<br>"  "<br>""</span>
+      </div>
+
+      <div class="token-ref-row">
+        <span class="token-ref-name" style="color:#ef4444;">INVALID_VALUE</span>
+        <span class="token-ref-examples">@#$%<br>12/ab<br>???</span>
+      </div>
+    </div>
+
+    </div><!-- fin info-row -->
 
     <!-- PANEL: RESULTADOS (oculto hasta que se analice algo) -->
     <div class="panel hidden" id="panelResultados">
@@ -557,13 +649,11 @@
       <!-- Leyenda de colores de tokens -->
       <div class="legend">
         <span style="font-size:0.7rem; color:var(--muted); font-family:'JetBrains Mono',monospace; margin-right:0.3rem;">TOKENS:</span>
-        <span class="legend-item"><span class="token-INTEGER">■</span> INTEGER</span>
-        <span class="legend-item"><span class="token-FLOAT">■</span> FLOAT</span>
-        <span class="legend-item"><span class="token-DATE">■</span> DATE</span>
-        <span class="legend-item"><span class="token-EMAIL">■</span> EMAIL</span>
-        <span class="legend-item"><span class="token-STRING">■</span> STRING</span>
-        <span class="legend-item"><span class="token-EMPTY">■</span> EMPTY</span>
-        <span class="legend-item"><span class="token-INVALID">■</span> INVALID</span>
+        <span class="legend-item"><span class="token-TEXT_VALUE">■</span> TEXT_VALUE</span>
+        <span class="legend-item"><span class="token-NUMERIC_VALUE">■</span> NUMERIC_VALUE</span>
+        <span class="legend-item"><span class="token-VALUE_DATE">■</span> VALUE_DATE</span>
+        <span class="legend-item"><span class="token-NULL_VALUE">■</span> NULL_VALUE</span>
+        <span class="legend-item"><span class="token-INVALID_VALUE">■</span> INVALID_VALUE</span>
       </div>
     </div>
 
