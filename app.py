@@ -7,35 +7,24 @@ import io
 app = Flask(__name__) #inicializamos el flask.
 
 #funcion para reconocer tokens, ademas de fecha en formato americano y correo electronico.
-def reconocer_token(valor): 
- 
-    valor = valor.strip()  #usamos strip para limpiar espacios en blanco y evitar errores en el programa.
+def reconocer_token(valor):
+
+    valor = valor.strip()  # limpiamos espacios para evitar falsos errores
 
     if valor == "":
-        return "EMPTY" #si esta vacio retornamos empty, posteriormente en la generacion sql pasara como null
+        return "NULL_VALUE"  # celda vacía → NULL en SQL
 
-   
-    elif re.fullmatch(r'\d+', valor):  #usamos full match de regex para que retorne INTEGER(entero) si cumple con la condicion de un numero de mas de un digito
-        return "INTEGER"
+    elif re.fullmatch(r'\d{4}-\d{2}-\d{2}', valor):
+        return "VALUE_DATE"  # va primero que numérico para que 2026-01-15 no se confunda
 
-    
-    elif re.fullmatch(r'\d+\.\d+', valor): # aqui lo mismo pero en decimales
-        return "FLOAT"
+    elif re.fullmatch(r'\d+(\.\d+)?', valor):  # entero Y decimal en una sola regex
+        return "NUMERIC_VALUE"  # va sin comillas en SQL
 
-    
-    elif re.fullmatch(r'\d{4}-\d{2}-\d{2}', valor): # aqui lo mismo pero en fechas, 4 numeros para año, 2 para meses y 2 para dias.
-        return "DATE"
+    elif re.fullmatch(r'[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9 _\-\.]+', valor):
+        return "TEXT_VALUE"  # va con comillas simples en SQL
 
-    
-    elif re.fullmatch(r'[\w.\-+]+@[\w.\-]+\.[a-zA-Z]{2,}', valor): #exigimos arroba y 2 letras para el dominio como minimo
-        return "EMAIL"
-
-    
-    elif re.fullmatch(r'[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9 _\-\.]+', valor): #aqui consideramos un string cualquier caracter de esa lista xD
-        return "STRING"
-
-    else: 
-        return "INVALID" #si no cumple con nada, invalidamos.
+    else:
+        return "INVALID_VALUE"  # dispara el error léxico, la fila no se exporta
 
 
 # recorremos las filas del csv para verificar sus tokens
