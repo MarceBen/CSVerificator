@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>CSVerificator – Validador CSV</title>
+  <title>CSVerificator – TechStore Perú</title>
 
   <!-- Google Fonts: Syne (display) + JetBrains Mono (código) -->
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
@@ -505,7 +505,7 @@
   <header>
     <div class="logo-icon">CSV</div>
     <h1>CS<span>Verificator</span></h1>
-    <div class="badge-curso">Programa orientado a validar DB'S de pequeñas empresas </div>
+    <div class="badge-curso">TechStore Perú · Validador de compras CSV</div>
   </header>
 
   <!-- ── CONTENIDO PRINCIPAL ── -->
@@ -687,7 +687,21 @@
     <!-- Estado inicial vacío -->
     <div class="empty-state" id="emptyState">
       <div class="big-icon">📋</div>
-      <p>Sube un archivo CSV y presiona <strong>Analizar</strong> para ver los resultados aquí.</p>
+      <p>Sube el CSV de compras de <strong>TechStore Perú</strong> y presiona <strong>Analizar</strong>.<br><small style="color:var(--muted);">Formato requerido: id_compra, proveedor, objeto, monto, fecha (5 columnas)</small></p>
+    </div>
+
+    <!-- PANEL: CONTEO DE TOKENS Y LEXEMAS -->
+    <div class="panel hidden" id="panelTokens">
+      <div class="panel-header">
+        <div class="panel-dot" style="background: var(--accent2);"></div>
+        Resumen de tokens y lexemas encontrados
+      </div>
+      <div class="panel-body">
+        <p style="font-size:0.82rem; color:var(--muted); margin-bottom:1rem;">
+          Conteo total de tokens reconocidos en el CSV, con sus lexemas correspondientes.
+        </p>
+        <div id="tablaTokens"></div>
+      </div>
     </div>
 
   </main>
@@ -866,6 +880,44 @@
         panelSQL.classList.remove("hidden");
       } else {
         panelSQL.classList.add("hidden");
+      }
+
+      // ── Conteo de tokens y lexemas ──
+      const panelTokens = document.getElementById("panelTokens");
+      const tablaTokens = document.getElementById("tablaTokens");
+      tablaTokens.innerHTML = "";
+
+      if (data.conteo_tokens) {
+        // Color de cada token, igual que la leyenda
+        const colores = {
+          TEXT_VALUE:    "#a3e635",
+          NUMERIC_VALUE: "#60a5fa",
+          VALUE_DATE:    "#34d399",
+          NULL_VALUE:    "#f59e0b",
+          INVALID_VALUE: "#ef4444"
+        };
+
+        let html = `<table class="results-table">
+          <thead><tr><th>Token</th><th>Total encontrados</th><th>Lexemas</th></tr></thead>
+          <tbody>`;
+
+        for (const [token, lexemas] of Object.entries(data.conteo_tokens)) {
+          const color = colores[token] || "var(--text)";
+          // Mostramos cada lexema encontrado separado por coma
+          const lexemasStr = lexemas.length > 0
+            ? lexemas.map(l => escaparHTML(l) || "<em>vacío</em>").join(", ")
+            : `<em style="color:var(--muted)">ninguno</em>`;
+
+          html += `<tr>
+            <td><span style="color:${color}; font-family:'JetBrains Mono',monospace; font-weight:700;">${token}</span></td>
+            <td style="font-family:'JetBrains Mono',monospace; color:${color}; font-size:1.1rem; font-weight:700;">${lexemas.length}</td>
+            <td style="font-size:0.75rem; font-family:'JetBrains Mono',monospace; color:var(--muted);">${lexemasStr}</td>
+          </tr>`;
+        }
+
+        html += `</tbody></table>`;
+        tablaTokens.innerHTML = html;
+        panelTokens.classList.remove("hidden");
       }
 
       // Hacemos scroll suave hacia los resultados
