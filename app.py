@@ -154,6 +154,11 @@ def analizar():
     encabezado = filas[0]
     filas_datos = filas[1:]  # El resto son los datos
 
+    # Validamos que el CSV tenga exactamente 5 columnas (estructura TechStore Peru)
+    # Las 5 columnas esperadas: id_compra, proveedor, objeto, monto, fecha
+    if len(encabezado) != 5:
+        return jsonify({"error": f"El CSV debe tener exactamente 5 columnas (id_compra, proveedor, objeto, monto, fecha). Se encontraron {len(encabezado)}."}), 400
+
     # --- ANÁLISIS LÉXICO (revisamos cada celda) ---
     resultados_lexicos = analizar_lexico(filas_datos)
 
@@ -180,12 +185,21 @@ def analizar():
     filas_validas = total_filas - len(filasInvalidas)
     total_errores_lexicos = sum(len(r["errores_lexicos"]) for r in resultados_lexicos)
 
+    # Contamos cuantos lexemas encontramos de cada token en todo el CSV
+    conteo_tokens = {"TEXT_VALUE": [], "NUMERIC_VALUE": [], "VALUE_DATE": [], "NULL_VALUE": [], "INVALID_VALUE": []}
+    for resultado in resultados_lexicos:
+        for celda in resultado["celdas"]:
+            token = celda["token"]
+            if token in conteo_tokens:
+                conteo_tokens[token].append(celda["valor"])  # guardamos el lexema real
+
     # Devolvemos todo en formato JSON al frontend
     return jsonify({
         "encabezado": encabezado,
         "resultados_lexicos": resultados_lexicos,
         "errores_sintacticos": [e["mensaje"] for e in errores_sintacticos],
         "sentencias_sql": sentencias_sql,
+        "conteo_tokens": conteo_tokens,
         "resumen": {
             "total_filas": total_filas,
             "filas_validas": filas_validas,
