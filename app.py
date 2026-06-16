@@ -6,27 +6,65 @@ import io
 
 app = Flask(__name__) #inicializamos el flask.
 
-#funcion para reconocer tokens, ademas de fecha en formato americano y correo electronico.
-def reconocer_token(valor):
 
-    valor = valor.strip()  # limpiamos espacios para evitar falsos errores
+# --- AUTÓMATAS ---
+def automata_value_date(lexema):
+    estado = 0
+    for char in lexema:
+        if estado in [0, 1, 2, 3]:
+            if char.isdigit(): estado += 1
+            else: return False
+        elif estado == 4:
+            if char == '-': estado = 5
+            else: return False
+        elif estado in [5, 6]:
+            if char.isdigit(): estado += 1
+            else: return False
+        elif estado == 7:
+            if char == '-': estado = 8
+            else: return False
+        elif estado in [8, 9]:
+            if char.isdigit(): estado += 1
+            else: return False
+        else:
+            return False
+    return estado == 10
+
+def automata_text_value(lexema):
+    if not lexema: return False
+    estado = 0
+    letras_validas = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZáéíóúÁÉÍÓÚñÑüÜ"
+    caracteres_secundarios = letras_validas + "0123456789 _-.@"
+    
+    for char in lexema:
+        if estado == 0:
+            if char in letras_validas: estado = 1
+            else: return False
+        elif estado == 1:
+            if char not in caracteres_secundarios: return False
+    return estado == 1
+
+# --- FUNCION PRINCIPAL REFACTORIZADA ---
+def reconocer_token(valor):
+    valor = valor.strip()
 
     if valor == "":
-        return "NULL_VALUE"  # celda vacía es NULL en SQL
+        return "NULL_VALUE"
+    
+    # 1. Evaluamos con el Autómata de Fechas
+    elif automata_value_date(valor):
+        return "VALUE_DATE"
+        
+    # El numérico lo dejamos con regex porque no pediste su autómata (todavía)
+    elif re.fullmatch(r'\d+(\.\d+)?', valor):
+        return "NUMERIC_VALUE"
 
-    elif re.fullmatch(r'\d{4}-\d{2}-\d{2}', valor):
-        return "VALUE_DATE"  # va primero que numérico para que 2026-01-15 no se confunda
-
-    elif re.fullmatch(r'\d+(\.\d+)?', valor):  # entero Y decimal en una sola regex para que se considere parte de un solo token
-        return "NUMERIC_VALUE"  # va sin comillas para exportar en sql
-
-    elif re.fullmatch(r'[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ][a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9 _\-\.@]*', valor):
-         return "TEXT_VALUE" # va con comillas simples en SQL
+    # 2. Evaluamos con el Autómata de Texto
+    elif automata_text_value(valor):
+        return "TEXT_VALUE"
 
     else:
-        return "INVALID_VALUE"  # dispara el error léxico, la fila no se exporta
-
-
+        return "INVALID_VALUE"
 # recorremos las filas del csv para verificar sus tokens
 def analizar_lexico(filas): #filas del csv
     
@@ -107,6 +145,72 @@ def generar_sql(tabla, encabezado, filas_datos, filas_invalidas_idx):
 
     return sentencias
 
+
+
+# --- GENERACIÓN DEL ÁRBOL DE DERIVACIÓN ---
+# Construye un árbol JSON con la estructura gramatical del CSV analizado
+def generar_arbol(encabezado, filas_datos, resultados_lexicos):
+
+    # Nodo raíz: CSV
+    arbol = {
+        "nombre": "CSV",
+        "hijos": [
+            {
+                # Primer hijo: ENCABEZADO con cada columna como terminal
+                "nombre": "ENCABEZADO",
+                "hijos": [
+                    {"nombre": col.strip(), "hijos": [], "es_terminal": True}
+                    for col in encabezado
+                ],
+                "es_terminal": False
+            },
+            {
+                # Segundo hijo: FILAS (se llena abajo)
+                "nombre": "FILAS",
+                "hijos": [],
+                "es_terminal": False
+            }
+        ],
+        "es_terminal": False
+    }
+
+    nodo_filas = arbol["hijos"][1]
+
+    # Por cada fila de datos, creamos un nodo FILA con sus celdas
+    for resultado in resultados_lexicos:
+        nodo_fila = {
+            "nombre": f"FILA {resultado['numero_fila']}",
+            "hijos": [],
+            "es_terminal": False
+        }
+
+        for celda in resultado["celdas"]:
+            # Cada celda tiene: nodo VALOR → nodo TOKEN → nodo LEXEMA (hoja)
+            nodo_valor = {
+                "nombre": "VALOR",
+                "hijos": [
+                    {
+                        "nombre": celda["token"],
+                        "hijos": [
+                            {
+                                "nombre": celda["valor"] if celda["valor"] != "" else "NULL",
+                                "hijos": [],
+                                "es_terminal": True,
+                                "es_lexema": True  # marca la hoja del árbol
+                            }
+                        ],
+                        "es_terminal": True,
+                        "es_error": celda["es_error"],
+                        "token": celda["token"]
+                    }
+                ],
+                "es_terminal": False
+            }
+            nodo_fila["hijos"].append(nodo_valor)
+
+        nodo_filas["hijos"].append(nodo_fila)
+
+    return arbol
 
 
 #  Flask xd
@@ -193,6 +297,9 @@ def analizar():
             if token in conteo_tokens:
                 conteo_tokens[token].append(celda["valor"])  # guardamos el lexema real
 
+    # Generamos el árbol de derivación con la estructura gramatical del CSV
+    arbol_derivacion = generar_arbol(encabezado, filas_datos, resultados_lexicos)
+
     # Devolvemos todo en formato JSON al frontend
     return jsonify({
         "encabezado": encabezado,
@@ -200,6 +307,7 @@ def analizar():
         "errores_sintacticos": [e["mensaje"] for e in errores_sintacticos],
         "sentencias_sql": sentencias_sql,
         "conteo_tokens": conteo_tokens,
+        "arbol_derivacion": arbol_derivacion,
         "resumen": {
             "total_filas": total_filas,
             "filas_validas": filas_validas,

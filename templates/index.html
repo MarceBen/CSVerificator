@@ -497,6 +497,52 @@
       color: var(--muted);
       text-align: right;
     }
+
+    /* ===== SIMULADOR DE AUTÓMATAS ===== */
+    .sim-controls {
+      display: flex; gap: 1rem; align-items: center; margin-bottom: 1.5rem;
+      background: var(--surface2); padding: 1rem; border-radius: 8px;
+    }
+    .sim-controls select {
+      background: var(--token-bg); border: 1px solid var(--border); color: var(--text);
+      padding: 0.5rem; border-radius: 6px; font-family: 'JetBrains Mono', monospace; outline: none;
+    }
+    .automata-diagram {
+      display: flex; gap: 1rem; align-items: center; justify-content: center;
+      padding: 2rem; background: var(--token-bg); border-radius: 10px; border: 1px dashed var(--border);
+      overflow-x: auto; min-height: 150px;
+    }
+    .state-node {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--surface); border: 2px solid var(--muted);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: bold;
+      color: var(--muted); transition: all 0.3s; position: relative; flex-shrink: 0;
+    }
+    .state-node.accept { outline: 2px solid var(--muted); outline-offset: 3px; }
+    .state-node.active { 
+      background: var(--accent); border-color: var(--accent); color: white;
+      box-shadow: 0 0 15px var(--accent); transform: scale(1.1);
+    }
+    .state-node.active.accept { outline-color: var(--accent); }
+    .state-node.error { 
+      background: var(--danger); border-color: var(--danger); color: white;
+      box-shadow: 0 0 15px var(--danger);
+    }
+    .transition-arrow {
+      height: 2px; background: var(--muted); flex-grow: 1; min-width: 20px;
+      position: relative; transition: all 0.3s;
+    }
+    .transition-arrow::after {
+      content: ''; position: absolute; right: 0; top: -4px;
+      border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 5px solid var(--muted);
+    }
+    .sim-log {
+      margin-top: 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;
+      background: #000; padding: 1rem; border-radius: 8px; color: #a3e635; min-height: 60px;
+    }
+
+
   </style>
 </head>
 <body>
@@ -703,6 +749,78 @@
         <div id="tablaTokens"></div>
       </div>
     </div>
+
+    <!-- PANEL: GRAMÁTICA BNF -->
+    <div class="panel hidden" id="panelGramatica">
+      <div class="panel-header">
+        <div class="panel-dot" style="background: #f59e0b;"></div>
+        Gramática formal (BNF) del CSV analizado
+      </div>
+      <div class="panel-body">
+        <p style="font-size:0.82rem; color:var(--muted); margin-bottom:1rem;">
+          Reglas de producción que definen la estructura válida del CSV de TechStore Perú.
+        </p>
+        <pre style="font-family:'JetBrains Mono',monospace; font-size:0.78rem; line-height:1.9; background:var(--token-bg); padding:1.2rem; border-radius:10px; border:1px solid var(--border); overflow-x:auto; color:#94a3b8;"><span style="color:#f59e0b;">&lt;csv&gt;</span>           ::= <span style="color:#a78bfa;">&lt;encabezado&gt;</span> <span style="color:#a78bfa;">&lt;filas&gt;</span>
+<span style="color:#a78bfa;">&lt;encabezado&gt;</span>    ::= <span style="color:#60a5fa;">&lt;celda&gt;</span> "," <span style="color:#60a5fa;">&lt;celda&gt;</span> "," <span style="color:#60a5fa;">&lt;celda&gt;</span> "," <span style="color:#60a5fa;">&lt;celda&gt;</span> "," <span style="color:#60a5fa;">&lt;celda&gt;</span>
+<span style="color:#a78bfa;">&lt;filas&gt;</span>         ::= <span style="color:#a78bfa;">&lt;fila&gt;</span> | <span style="color:#a78bfa;">&lt;fila&gt;</span> <span style="color:#a78bfa;">&lt;filas&gt;</span>
+<span style="color:#a78bfa;">&lt;fila&gt;</span>          ::= <span style="color:#60a5fa;">&lt;valor&gt;</span> "," <span style="color:#60a5fa;">&lt;valor&gt;</span> "," <span style="color:#60a5fa;">&lt;valor&gt;</span> "," <span style="color:#60a5fa;">&lt;valor&gt;</span> "," <span style="color:#60a5fa;">&lt;valor&gt;</span>
+<span style="color:#60a5fa;">&lt;valor&gt;</span>         ::= <span style="color:#a3e635;">TEXT_VALUE</span> | <span style="color:#60a5fa;">NUMERIC_VALUE</span> | <span style="color:#34d399;">VALUE_DATE</span> | <span style="color:#f59e0b;">NULL_VALUE</span> | <span style="color:#ef4444;">INVALID_VALUE</span>
+
+<span style="color:#94a3b8;">--- Expresiones regulares (gramática regular, Tipo 3) ---</span>
+<span style="color:#a3e635;">TEXT_VALUE</span>      ::= [a-zA-ZáéíóúÁÉÍÓÚñÑüÜ][a-zA-Z0-9 _\-\.@]*
+<span style="color:#60a5fa;">NUMERIC_VALUE</span>   ::= \d+(\.\d+)?
+<span style="color:#34d399;">VALUE_DATE</span>      ::= \d{4}-\d{2}-\d{2}
+<span style="color:#f59e0b;">NULL_VALUE</span>      ::= ""   (cadena vacía)
+<span style="color:#ef4444;">INVALID_VALUE</span>   ::= cualquier valor que no coincida con los anteriores</pre>
+      </div>
+    </div>
+
+    <!-- PANEL: ÁRBOL DE DERIVACIÓN -->
+    <div class="panel hidden" id="panelArbol">
+      <div class="panel-header">
+        <div class="panel-dot" style="background: #a78bfa;"></div>
+        Árbol de derivación
+      </div>
+      <div class="panel-body">
+        <p style="font-size:0.82rem; color:var(--muted); margin-bottom:1rem;">
+          Visualización de la estructura gramatical del CSV analizado.
+        </p>
+        <div style="display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1rem;">
+          <span style="font-size:0.72rem; font-family:'JetBrains Mono',monospace; color:#a78bfa;">⬡ no terminal</span>
+          <span style="font-size:0.72rem; font-family:'JetBrains Mono',monospace; color:#60a5fa;">◈ token</span>
+          <span style="font-size:0.72rem; font-family:'JetBrains Mono',monospace; color:#94a3b8;">◇ lexema</span>
+          <span style="font-size:0.72rem; font-family:'JetBrains Mono',monospace; color:#ef4444;">✕ inválido</span>
+        </div>
+        <div style="overflow-x:auto; overflow-y:auto; max-height:520px;">
+          <canvas id="canvasArbol"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel hidden" id="panelSimulador">
+      <div class="panel-header">
+        <div class="panel-dot" style="background: var(--accent);"></div>
+        Simulador Visual de Autómatas (AFD)
+      </div>
+      <div class="panel-body">
+        <p style="font-size:0.82rem; color:var(--muted); margin-bottom:1rem;">
+          Selecciona uno de los tokens detectados en el CSV para ver cómo el analizador léxico procesa la cadena carácter por carácter a través de sus estados.
+        </p>
+        
+        <div class="sim-controls">
+          <select id="simSelectToken">
+            </select>
+          <button class="btn-copy" style="margin-top:0;" onclick="iniciarSimulacion()">▶ Iniciar Simulación</button>
+        </div>
+
+        <div class="automata-diagram" id="diagramaAutomata">
+          <span style="color:var(--muted); font-size:0.8rem;">Selecciona un token para renderizar el AFD</span>
+        </div>
+
+        <div class="sim-log" id="simLog">Esperando simulación...</div>
+      </div>
+    </div>
+
 
   </main>
 
@@ -920,6 +1038,17 @@
         panelTokens.classList.remove("hidden");
       }
 
+      // ── Gramática BNF ──
+      // Siempre la mostramos porque es fija (describe las reglas del programa)
+      document.getElementById("panelGramatica").classList.remove("hidden");
+
+      // ── Árbol de derivación ──
+      if (data.arbol_derivacion) {
+        document.getElementById("panelArbol").classList.remove("hidden");
+        // Pequeño delay para que el canvas tenga dimensiones antes de dibujar
+        setTimeout(() => dibujarArbol(data.arbol_derivacion), 50);
+      }
+
       // Hacemos scroll suave hacia los resultados
       document.getElementById("panelResultados").scrollIntoView({ behavior: "smooth" });
     }
@@ -943,6 +1072,101 @@
     }
 
 
+    // ─── Dibuja el árbol de derivación en el canvas ───
+    function dibujarArbol(nodo) {
+      const canvas = document.getElementById("canvasArbol");
+      const ctx = canvas.getContext("2d");
+      const NODE_W = 120, NODE_H = 30, GAP_X = 14, GAP_Y = 60;
+
+      // Colores por tipo de nodo
+      const COLOR = {
+        raiz:        { fill: "#1e1b4b", stroke: "#a78bfa", text: "#a78bfa" },
+        nonterminal: { fill: "#0f172a", stroke: "#6366f1", text: "#818cf8" },
+        token:       { fill: "#0f2231", stroke: "#3b82f6", text: "#60a5fa" },
+        lexema:      { fill: "#0f1f14", stroke: "#334155", text: "#94a3b8" },
+        error:       { fill: "#2d0a0a", stroke: "#ef4444", text: "#ef4444" },
+      };
+
+      // Mide el ancho total que necesita un nodo con sus hijos
+      function medirAncho(n) {
+        if (!n.hijos || n.hijos.length === 0) return NODE_W;
+        const total = n.hijos.reduce((s, h) => s + medirAncho(h) + GAP_X, -GAP_X);
+        return Math.max(NODE_W, total);
+      }
+
+      // Asigna coordenadas X,Y a cada nodo recursivamente
+      function asignarPos(n, x, y, anchoDisponible) {
+        n._x = x + anchoDisponible / 2 - NODE_W / 2;
+        n._y = y;
+        if (!n.hijos || n.hijos.length === 0) return;
+        const anchos = n.hijos.map(h => medirAncho(h));
+        const totalAncho = anchos.reduce((s, a) => s + a + GAP_X, -GAP_X);
+        let cx = x + anchoDisponible / 2 - totalAncho / 2;
+        n.hijos.forEach((h, i) => {
+          asignarPos(h, cx, y + NODE_H + GAP_Y, anchos[i]);
+          cx += anchos[i] + GAP_X;
+        });
+      }
+
+      // Calcula la profundidad máxima del árbol
+      function profundidad(n) {
+        if (!n.hijos || n.hijos.length === 0) return 1;
+        return 1 + Math.max(...n.hijos.map(profundidad));
+      }
+
+      const anchoTotal = medirAncho(nodo);
+      const altoTotal  = profundidad(nodo) * (NODE_H + GAP_Y) + 20;
+      canvas.width  = Math.max(anchoTotal + 40, 600);
+      canvas.height = altoTotal;
+      asignarPos(nodo, 20, 20, anchoTotal);
+
+      // Dibuja las líneas entre nodos padre e hijo
+      function dibujarLineas(n) {
+        if (!n.hijos || n.hijos.length === 0) return;
+        n.hijos.forEach(h => {
+          ctx.beginPath();
+          ctx.moveTo(n._x + NODE_W / 2, n._y + NODE_H);
+          ctx.lineTo(h._x + NODE_W / 2, h._y);
+          ctx.strokeStyle = "#1e2d47";
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+          dibujarLineas(h);
+        });
+      }
+
+      // Dibuja cada nodo con su color y etiqueta
+      function dibujarNodos(n, nivel) {
+        let c;
+        if (nivel === 0)        c = COLOR.raiz;
+        else if (n.es_lexema)   c = COLOR.lexema;
+        else if (n.es_error)    c = COLOR.error;
+        else if (n.es_terminal) c = COLOR.token;
+        else                    c = COLOR.nonterminal;
+
+        ctx.beginPath();
+        ctx.roundRect(n._x, n._y, NODE_W, NODE_H, 6);
+        ctx.fillStyle = c.fill;
+        ctx.fill();
+        ctx.strokeStyle = c.stroke;
+        ctx.lineWidth = nivel === 0 ? 1.5 : 1;
+        ctx.stroke();
+
+        ctx.fillStyle = c.text;
+        ctx.font = `${nivel === 0 ? "700" : "500"} 11px 'JetBrains Mono', monospace`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        let label = n.nombre;
+        if (label.length > 14) label = label.slice(0, 13) + "…";
+        ctx.fillText(label, n._x + NODE_W / 2, n._y + NODE_H / 2);
+
+        if (n.hijos) n.hijos.forEach(h => dibujarNodos(h, nivel + 1));
+      }
+
+      dibujarLineas(nodo);
+      dibujarNodos(nodo, 0);
+    }
+
+
     // ─── Copia el SQL al portapapeles ───
     function copiarSQL() {
       const sqlBlock = document.getElementById("sqlBlock");
@@ -953,6 +1177,145 @@
         setTimeout(() => btn.textContent = "📋 Copiar SQL", 2000);
       });
     }
+
+
+    // ─── LÓGICA DEL SIMULADOR DE AUTÓMATAS ───
+
+    // 1. Intervenir la función mostrarResultados para llenar el selector
+    const originalMostrarResultados = mostrarResultados;
+    mostrarResultados = function(data) {
+      originalMostrarResultados(data); // Ejecuta todo lo original
+      
+      const select = document.getElementById("simSelectToken");
+      select.innerHTML = "";
+      let opcionesAgregadas = 0;
+
+      // Recorremos los tokens y agregamos las opciones válidas al select
+      if(data.conteo_tokens) {
+        ['VALUE_DATE', 'TEXT_VALUE'].forEach(tipo => {
+          if(data.conteo_tokens[tipo]) {
+            // Tomamos solo valores únicos para no repetir
+            const unicos = [...new Set(data.conteo_tokens[tipo])];
+            unicos.slice(0, 5).forEach(lexema => { // Limitamos a 5 de cada uno por limpieza
+              const opt = document.createElement("option");
+              opt.value = JSON.stringify({tipo: tipo, lexema: lexema});
+              opt.textContent = `[${tipo}] - "${lexema}"`;
+              select.appendChild(opt);
+              opcionesAgregadas++;
+            });
+          }
+        });
+      }
+
+      const panelSimulador = document.getElementById("panelSimulador");
+      if(opcionesAgregadas > 0) {
+        panelSimulador.classList.remove("hidden");
+        prepararDiagrama(); // Dibuja el primer autómata
+      } else {
+        panelSimulador.classList.add("hidden");
+      }
+    };
+
+    // 2. Preparar el diagrama HTML según el tipo de autómata
+    document.getElementById("simSelectToken").addEventListener("change", prepararDiagrama);
+
+    function prepararDiagrama() {
+      const selection = JSON.parse(document.getElementById("simSelectToken").value);
+      const diagram = document.getElementById("diagramaAutomata");
+      diagram.innerHTML = "";
+      
+      if(selection.tipo === "VALUE_DATE") {
+        // Genera 11 nodos (q0 a q10)
+        for(let i = 0; i <= 10; i++) {
+          diagram.innerHTML += `<div class="state-node ${i===10 ? 'accept' : ''}" id="q${i}">q${i}</div>`;
+          if(i < 10) diagram.innerHTML += `<div class="transition-arrow"></div>`;
+        }
+      } else if (selection.tipo === "TEXT_VALUE") {
+        // Genera 2 nodos (q0 y q1)
+        diagram.innerHTML += `<div class="state-node" id="q0">q0</div>`;
+        diagram.innerHTML += `<div class="transition-arrow"></div>`;
+        diagram.innerHTML += `<div class="state-node accept" id="q1">q1</div>`;
+      }
+      document.getElementById("simLog").innerHTML = "Diagrama cargado. Presiona 'Iniciar Simulación'.";
+    }
+
+    // 3. Ejecutar la simulación con retardos (Timeouts)
+    async function iniciarSimulacion() {
+      const selection = JSON.parse(document.getElementById("simSelectToken").value);
+      const lexema = selection.lexema;
+      const log = document.getElementById("simLog");
+      
+      // Reset visual
+      document.querySelectorAll('.state-node').forEach(n => n.classList.remove('active', 'error'));
+      let estadoActual = 0;
+      log.innerHTML = `Analizando: "${lexema}"<br>`;
+      
+      // Resalta q0
+      document.getElementById(`q0`).classList.add('active');
+
+      const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+      for(let i = 0; i < lexema.length; i++) {
+        await sleep(600); // 600ms entre cada carácter
+        const char = lexema[i];
+        const logLine = `-> Lee '${char}': `;
+        
+        document.getElementById(`q${estadoActual}`).classList.remove('active');
+
+        // Lógica replicada para VALUE_DATE
+        if(selection.tipo === "VALUE_DATE") {
+          let transicionValida = false;
+          if([0,1,2,3,5,6,8,9].includes(estadoActual) && !isNaN(char) && char.trim() !== '') {
+            estadoActual++; transicionValida = true;
+          } else if([4,7].includes(estadoActual) && char === '-') {
+            estadoActual++; transicionValida = true;
+          }
+
+          if(!transicionValida) {
+            log.innerHTML += `${logLine} <span style="color:red">Error sintáctico. Pasa a estado muerto.</span><br>`;
+            return;
+          }
+        } 
+        // Lógica replicada para TEXT_VALUE
+        else if (selection.tipo === "TEXT_VALUE") {
+          const letras = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZáéíóúÁÉÍÓÚñÑüÜ";
+          const todos = letras + "0123456789 _-.@";
+          
+          if(estadoActual === 0) {
+            if(letras.includes(char)) estadoActual = 1;
+            else { log.innerHTML += `${logLine} <span style="color:red">Carácter inicial inválido.</span><br>`; return; }
+          } else if (estadoActual === 1) {
+            if(!todos.includes(char)) {
+              log.innerHTML += `${logLine} <span style="color:red">Carácter ilegal.</span><br>`;
+              document.getElementById(`q1`).classList.add('error');
+              return;
+            }
+            // Se mantiene en q1 (bucle)
+          }
+        }
+
+        // Actualizar visual
+        const nodoNuevo = document.getElementById(`q${estadoActual}`);
+        if(nodoNuevo) nodoNuevo.classList.add('active');
+        log.innerHTML += `${logLine} <span style="color:yellow">Pasa al estado q${estadoActual}</span><br>`;
+      }
+
+      await sleep(600);
+      
+      // Comprobación final de aceptación
+      const esAceptado = (selection.tipo === "VALUE_DATE" && estadoActual === 10) || 
+                        (selection.tipo === "TEXT_VALUE" && estadoActual === 1);
+      
+      if(esAceptado) {
+        log.innerHTML += `<br><span style="color:#10b981; font-weight:bold;">✓ CADENA ACEPTADA</span>`;
+      } else {
+        document.getElementById(`q${estadoActual}`).classList.add('error');
+        log.innerHTML += `<br><span style="color:#ef4444; font-weight:bold;">✗ CADENA RECHAZADA (No terminó en estado de aceptación)</span>`;
+      }
+    }
+
+
+
   </script>
 
 </body>
