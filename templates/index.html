@@ -8,6 +8,9 @@
   <!-- Google Fonts: Syne (display) + JetBrains Mono (código) -->
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
 
+  <!-- jsPDF: librería para generar el PDF de los INSERT directamente en el navegador -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
   <style>
     /* ===== VARIABLES DE COLOR Y TEMA ===== */
     :root {
@@ -984,18 +987,31 @@
         <p style="font-size:0.82rem; color:var(--muted); margin-bottom:1rem;">
           Reglas de producción que definen la estructura válida del CSV de TechStore Perú.
         </p>
-        <pre style="font-family:'JetBrains Mono',monospace; font-size:0.78rem; line-height:1.9; background:var(--token-bg); padding:1.2rem; border-radius:10px; border:1px solid var(--border); overflow-x:auto; color:#94a3b8;"><span style="color:#fbbf24;">&lt;csv&gt;</span>           ::= <span style="color:#a78bfa;">&lt;encabezado&gt;</span> <span style="color:#a78bfa;">&lt;filas&gt;</span>
-<span style="color:#a78bfa;">&lt;encabezado&gt;</span>    ::= <span style="color:#60a5fa;">&lt;celda&gt;</span> "," <span style="color:#60a5fa;">&lt;celda&gt;</span> "," <span style="color:#60a5fa;">&lt;celda&gt;</span> "," <span style="color:#60a5fa;">&lt;celda&gt;</span> "," <span style="color:#60a5fa;">&lt;celda&gt;</span>
-<span style="color:#a78bfa;">&lt;filas&gt;</span>         ::= <span style="color:#a78bfa;">&lt;fila&gt;</span> | <span style="color:#a78bfa;">&lt;fila&gt;</span> <span style="color:#a78bfa;">&lt;filas&gt;</span>
-<span style="color:#a78bfa;">&lt;fila&gt;</span>          ::= <span style="color:#60a5fa;">&lt;valor&gt;</span> "," <span style="color:#60a5fa;">&lt;valor&gt;</span> "," <span style="color:#60a5fa;">&lt;valor&gt;</span> "," <span style="color:#60a5fa;">&lt;valor&gt;</span> "," <span style="color:#60a5fa;">&lt;valor&gt;</span>
-<span style="color:#60a5fa;">&lt;valor&gt;</span>         ::= <span style="color:#a3e635;">TEXT_VALUE</span> | <span style="color:#60a5fa;">NUMERIC_VALUE</span> | <span style="color:#34d399;">VALUE_DATE</span> | <span style="color:#f59e0b;">NULL_VALUE</span> | <span style="color:#ef4444;">INVALID_VALUE</span>
+        <pre style="font-family:'JetBrains Mono',monospace; font-size:0.78rem; line-height:1.9; background:var(--token-bg); padding:1.2rem; border-radius:10px; border:1px solid var(--border); overflow-x:auto; color:#94a3b8;"><span style="color:#fbbf24;">&lt;csv&gt;</span>            ::= <span style="color:#a78bfa;">&lt;encabezado&gt;</span> <span style="color:#a78bfa;">&lt;filas&gt;</span>
+<span style="color:#a78bfa;">&lt;encabezado&gt;</span>     ::= <span style="color:#60a5fa;">&lt;celda&gt;</span> "," <span style="color:#60a5fa;">&lt;celda&gt;</span> "," <span style="color:#60a5fa;">&lt;celda&gt;</span> "," <span style="color:#60a5fa;">&lt;celda&gt;</span> "," <span style="color:#60a5fa;">&lt;celda&gt;</span>
+<span style="color:#a78bfa;">&lt;filas&gt;</span>          ::= <span style="color:#a78bfa;">&lt;fila&gt;</span> | <span style="color:#a78bfa;">&lt;fila&gt;</span> <span style="color:#a78bfa;">&lt;filas&gt;</span>
+<span style="color:#a78bfa;">&lt;fila&gt;</span>           ::= <span style="color:#60a5fa;">&lt;valor&gt;</span> "," <span style="color:#60a5fa;">&lt;valor&gt;</span> "," <span style="color:#60a5fa;">&lt;valor&gt;</span> "," <span style="color:#60a5fa;">&lt;valor&gt;</span> "," <span style="color:#60a5fa;">&lt;valor&gt;</span>
+<span style="color:#60a5fa;">&lt;valor&gt;</span>          ::= <span style="color:#a3e635;">&lt;texto&gt;</span> | <span style="color:#60a5fa;">&lt;numero&gt;</span> | <span style="color:#34d399;">&lt;fecha&gt;</span> | <span style="color:#f59e0b;">&lt;nulo&gt;</span>
 
-<span style="color:#94a3b8;">--- Cada token, a su vez, es definido por una gramática regular (Tipo 3) ---</span>
-<span style="color:#a3e635;">TEXT_VALUE</span>      ::= [a-zA-ZáéíóúÁÉÍÓÚñÑüÜ][a-zA-Z0-9 _\-\.@]*
-<span style="color:#60a5fa;">NUMERIC_VALUE</span>   ::= \d+(\.\d+)?
-<span style="color:#34d399;">VALUE_DATE</span>      ::= \d{4}-\d{2}-\d{2}
-<span style="color:#f59e0b;">NULL_VALUE</span>      ::= ""   (cadena vacía)
-<span style="color:#ef4444;">INVALID_VALUE</span>   ::= cualquier valor que no coincida con los anteriores</pre>
+<span style="color:#94a3b8;">--- Producción de cada token como gramática libre de contexto (no como regex) ---</span>
+
+<span style="color:#a3e635;">&lt;texto&gt;</span>          ::= <span style="color:#a3e635;">&lt;letra&gt;</span> <span style="color:#a3e635;">&lt;resto_texto&gt;</span>
+<span style="color:#a3e635;">&lt;resto_texto&gt;</span>    ::= <span style="color:#a3e635;">&lt;car_texto&gt;</span> <span style="color:#a3e635;">&lt;resto_texto&gt;</span> | ε
+<span style="color:#a3e635;">&lt;car_texto&gt;</span>      ::= <span style="color:#a3e635;">&lt;letra&gt;</span> | <span style="color:#a3e635;">&lt;digito&gt;</span> | " " | "_" | "-" | "." | "@"
+<span style="color:#a3e635;">&lt;letra&gt;</span>          ::= "a" | "b" | … | "z" | "A" | … | "Z" | "á" | "é" | "í" | "ó" | "ú" | "ñ" | "ü" | …
+
+<span style="color:#60a5fa;">&lt;numero&gt;</span>         ::= <span style="color:#60a5fa;">&lt;entero&gt;</span> | <span style="color:#60a5fa;">&lt;entero&gt;</span> "." <span style="color:#60a5fa;">&lt;entero&gt;</span>
+<span style="color:#60a5fa;">&lt;entero&gt;</span>         ::= <span style="color:#60a5fa;">&lt;digito&gt;</span> | <span style="color:#60a5fa;">&lt;digito&gt;</span> <span style="color:#60a5fa;">&lt;entero&gt;</span>
+<span style="color:#60a5fa;">&lt;digito&gt;</span>         ::= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+
+<span style="color:#34d399;">&lt;fecha&gt;</span>          ::= <span style="color:#34d399;">&lt;anio&gt;</span> "-" <span style="color:#34d399;">&lt;mes&gt;</span> "-" <span style="color:#34d399;">&lt;dia&gt;</span>
+<span style="color:#34d399;">&lt;anio&gt;</span>           ::= <span style="color:#60a5fa;">&lt;digito&gt;</span> <span style="color:#60a5fa;">&lt;digito&gt;</span> <span style="color:#60a5fa;">&lt;digito&gt;</span> <span style="color:#60a5fa;">&lt;digito&gt;</span>
+<span style="color:#34d399;">&lt;mes&gt;</span>            ::= <span style="color:#60a5fa;">&lt;digito&gt;</span> <span style="color:#60a5fa;">&lt;digito&gt;</span>
+<span style="color:#34d399;">&lt;dia&gt;</span>            ::= <span style="color:#60a5fa;">&lt;digito&gt;</span> <span style="color:#60a5fa;">&lt;digito&gt;</span>
+
+<span style="color:#f59e0b;">&lt;nulo&gt;</span>           ::= ε   (cadena vacía, sin producción)
+
+<span style="color:#94a3b8;">--- Si ningún &lt;valor&gt; deriva la celda, el analizador la reporta como </span><span style="color:#ef4444;">INVALID_VALUE</span><span style="color:#94a3b8;"> (no forma parte del lenguaje generado) ---</span></pre>
       </div>
     </div>
 
@@ -1036,7 +1052,10 @@
           y <code style="color:var(--accent);">GO</code> para ejecución directa en SQL Server.
         </p>
         <div class="sql-block" id="sqlBlock"></div>
-        <button class="btn-copy" onclick="copiarSQL()">📋 Copiar SQL</button>
+        <div style="display:flex; gap:0.8rem; flex-wrap:wrap;">
+          <button class="btn-copy" onclick="copiarSQL()">📋 Copiar SQL</button>
+          <button class="btn-copy" onclick="descargarPDF()" style="border-color: var(--accent2); color: var(--accent2);">📄 Descargar PDF</button>
+        </div>
       </div>
     </div>
 
@@ -1425,10 +1444,71 @@
       const sqlBlock = document.getElementById("sqlBlock");
       // Extraemos el texto plano (sin etiquetas HTML)
       navigator.clipboard.writeText(sqlBlock.innerText).then(() => {
-        const btn = document.querySelector(".btn-copy");
+        const btn = document.querySelector('button[onclick="copiarSQL()"]');
+        const original = btn.textContent;
         btn.textContent = "✅ Copiado!";
-        setTimeout(() => btn.textContent = "📋 Copiar SQL", 2000);
+        setTimeout(() => btn.textContent = original, 2000);
       });
+    }
+
+
+    // ─── Genera y descarga un PDF con las sentencias SQL (INSERT, USE, GO) ───
+    function descargarPDF() {
+      const sqlBlock = document.getElementById("sqlBlock");
+      const lineas = sqlBlock.innerText.split("\n").filter(l => l.trim() !== "");
+
+      if (lineas.length === 0) {
+        alert("No hay sentencias SQL generadas todavía.");
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit: "pt", format: "a4" });
+
+      const margenIzq = 40;
+      let y = 50;
+      const altoLinea = 16;
+      const altoPagina = doc.internal.pageSize.getHeight();
+
+      // Encabezado del documento
+      doc.setFont("courier", "bold");
+      doc.setFontSize(13);
+      doc.text("CSVerificator — TechStore Perú", margenIzq, y);
+      y += 18;
+
+      doc.setFont("courier", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(100);
+      const fecha = new Date().toLocaleString("es-PE");
+      doc.text(`Sentencias SQL generadas · ${fecha}`, margenIzq, y);
+      y += 10;
+      doc.setDrawColor(200);
+      doc.line(margenIzq, y, 555, y);
+      y += 20;
+
+      // Cuerpo: cada línea de SQL en monoespaciado
+      doc.setFontSize(9.5);
+      lineas.forEach(linea => {
+        // Salto de página si ya no entra otra línea
+        if (y > altoPagina - 40) {
+          doc.addPage();
+          y = 50;
+        }
+
+        // Resaltamos visualmente USE y GO en negrita para que destaquen
+        if (/^(USE|GO)\b/.test(linea.trim())) {
+          doc.setFont("courier", "bold");
+          doc.setTextColor(59, 130, 246);
+        } else {
+          doc.setFont("courier", "normal");
+          doc.setTextColor(20, 20, 20);
+        }
+
+        doc.text(linea, margenIzq, y);
+        y += altoLinea;
+      });
+
+      doc.save("techstore_inserts.pdf");
     }
 
 
