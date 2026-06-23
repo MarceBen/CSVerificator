@@ -442,6 +442,184 @@
     /* ===== SECCIÓN OCULTA ===== */
     .hidden { display: none !important; }
 
+    /* ===== INTRO DEL PROYECTO ===== */
+    .intro-box {
+      background: linear-gradient(135deg, rgba(59,130,246,0.08), rgba(99,102,241,0.05));
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.8rem 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .intro-box::before {
+      content: '';
+      position: absolute;
+      top: -40%; right: -10%;
+      width: 240px; height: 240px;
+      background: radial-gradient(circle, rgba(59,130,246,0.15), transparent 70%);
+      pointer-events: none;
+    }
+
+    .intro-eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 700;
+      margin-bottom: 0.6rem;
+    }
+
+    .intro-box p {
+      font-size: 0.92rem;
+      line-height: 1.7;
+      color: var(--text);
+      max-width: 850px;
+    }
+
+    .intro-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 1.1rem;
+    }
+
+    .intro-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      color: var(--accent);
+      background: rgba(59,130,246,0.1);
+      border: 1px solid rgba(59,130,246,0.25);
+      padding: 0.3rem 0.7rem;
+      border-radius: 20px;
+    }
+
+    /* ===== SECCIÓN: número de paso en cada panel ===== */
+    .step-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      color: var(--bg);
+      background: var(--accent);
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    /* ===== TABLA DE TRANSICIONES AFD ===== */
+    .afd-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.2rem;
+      flex-wrap: wrap;
+    }
+
+    .afd-tab {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--token-bg);
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .afd-tab:hover { border-color: var(--accent); color: var(--text); }
+
+    .afd-tab.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+      font-weight: 700;
+    }
+
+    .transition-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+    }
+
+    .transition-table th {
+      background: var(--token-bg);
+      color: var(--accent);
+      padding: 0.6rem 0.9rem;
+      text-align: center;
+      border: 1px solid var(--border);
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+    }
+
+    .transition-table td {
+      padding: 0.55rem 0.9rem;
+      text-align: center;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .transition-table td.state-cell {
+      background: var(--token-bg);
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .transition-table tr.accept-row td.state-cell {
+      color: var(--success);
+    }
+
+    .transition-table tr.accept-row td.state-cell::after {
+      content: ' ✓';
+    }
+
+    .transition-table td.dead {
+      color: var(--danger);
+      opacity: 0.6;
+    }
+
+    .regex-card {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      background: var(--token-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+    }
+
+    .regex-card .rc-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .regex-card .rc-pattern {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--text);
+      background: rgba(255,255,255,0.03);
+      padding: 0.5rem 0.7rem;
+      border-radius: 6px;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    .regex-card .rc-desc {
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+
+    .regex-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1rem;
+    }
+
     /* ===== CUADRO DE TOKENS DE REFERENCIA ===== */
     .info-row {
       display: grid;
@@ -557,6 +735,25 @@
   <!-- ── CONTENIDO PRINCIPAL ── -->
   <main>
 
+    <!-- INTRO: descripción del proyecto -->
+    <div class="intro-box">
+      <div class="intro-eyebrow">Teoría de Computación · TechStore Perú</div>
+      <p>
+        Solución informática capaz de procesar archivos CSV que contienen registros de compras,
+        aplicando técnicas propias de compiladores: análisis léxico, análisis sintáctico y generación
+        de código. Como resultado, el sistema transforma los datos de entrada en sentencias
+        <strong style="color:var(--accent);">SQL Server</strong> válidas, facilitando la automatización
+        del proceso de almacenamiento de información en una base de datos relacional.
+      </p>
+      <div class="intro-tags">
+        <span class="intro-tag">Análisis léxico</span>
+        <span class="intro-tag">Análisis sintáctico</span>
+        <span class="intro-tag">Autómatas finitos</span>
+        <span class="intro-tag">Gramática libre de contexto</span>
+        <span class="intro-tag">Generación de código SQL</span>
+      </div>
+    </div>
+
     <!-- FILA: formulario + cuadro de tokens -->
     <div class="info-row">
 
@@ -640,11 +837,24 @@
 
     </div><!-- fin info-row -->
 
-    <!-- PANEL: RESULTADOS (oculto hasta que se analice algo) -->
+    <!-- PASO 1: RESUMEN DE ERRORES (sintácticos primero, son los más graves) -->
+    <div class="panel hidden" id="panelSintacticos">
+      <div class="panel-header">
+        <span class="step-tag">1</span>
+        <div class="panel-dot" style="background: var(--danger);"></div>
+        Resumen de errores sintácticos
+      </div>
+      <div class="panel-body">
+        <div class="error-list" id="listaSintacticos"></div>
+      </div>
+    </div>
+
+    <!-- PASO 2: RESULTADOS LÉXICOS (resumen de lexemas y errores por celda) -->
     <div class="panel hidden" id="panelResultados">
       <div class="panel-header">
+        <span class="step-tag">2</span>
         <div class="panel-dot" style="background: var(--success);"></div>
-        Resultados del análisis
+        Resumen de análisis léxico
       </div>
       <div class="panel-body">
 
@@ -703,42 +913,10 @@
       </div>
     </div>
 
-    <!-- PANEL: ERRORES SINTÁCTICOS -->
-    <div class="panel hidden" id="panelSintacticos">
-      <div class="panel-header">
-        <div class="panel-dot" style="background: var(--danger);"></div>
-        Errores sintácticos detectados
-      </div>
-      <div class="panel-body">
-        <div class="error-list" id="listaSintacticos"></div>
-      </div>
-    </div>
-
-    <!-- PANEL: SQL GENERADO -->
-    <div class="panel hidden" id="panelSQL">
-      <div class="panel-header">
-        <div class="panel-dot" style="background: var(--accent2);"></div>
-        Sentencias SQL generadas
-      </div>
-      <div class="panel-body">
-        <p style="font-size:0.82rem; color:var(--muted); margin-bottom:1rem;">
-          Solo se generan INSERT para las filas <strong style="color:var(--success);">sin errores</strong>.
-          Las filas inválidas son omitidas automáticamente.
-        </p>
-        <div class="sql-block" id="sqlBlock"></div>
-        <button class="btn-copy" onclick="copiarSQL()">📋 Copiar SQL</button>
-      </div>
-    </div>
-
-    <!-- Estado inicial vacío -->
-    <div class="empty-state" id="emptyState">
-      <div class="big-icon">📋</div>
-      <p>Sube el CSV de compras de <strong>TechStore Perú</strong> y presiona <strong>Analizar</strong>.<br><small style="color:var(--muted);">Formato requerido: id_compra, proveedor, objeto, monto, fecha (5 columnas)</small></p>
-    </div>
-
-    <!-- PANEL: CONTEO DE TOKENS Y LEXEMAS -->
+    <!-- PASO 3: TOKENS Y LEXEMAS ENCONTRADOS -->
     <div class="panel hidden" id="panelTokens">
       <div class="panel-header">
+        <span class="step-tag">3</span>
         <div class="panel-dot" style="background: var(--accent2);"></div>
         Resumen de tokens y lexemas encontrados
       </div>
@@ -750,23 +928,69 @@
       </div>
     </div>
 
-    <!-- PANEL: GRAMÁTICA BNF -->
+    <!-- PASO 4: EXPRESIONES REGULARES POR TOKEN -->
+    <div class="panel hidden" id="panelRegex">
+      <div class="panel-header">
+        <span class="step-tag">4</span>
+        <div class="panel-dot" style="background: #f97316;"></div>
+        Expresión regular de cada token encontrado
+      </div>
+      <div class="panel-body">
+        <p style="font-size:0.82rem; color:var(--muted); margin-bottom:1.2rem;">
+          Patrón regex que define formalmente cada token detectado en este CSV.
+        </p>
+        <div class="regex-grid" id="regexGrid"></div>
+      </div>
+    </div>
+
+    <!-- PASO 5: AFD CON TABLA DE TRANSICIÓN INTERACTIVA -->
+    <div class="panel hidden" id="panelAFD">
+      <div class="panel-header">
+        <span class="step-tag">5</span>
+        <div class="panel-dot" style="background: var(--accent);"></div>
+        Autómata Finito Determinista (AFD) y tabla de transición
+      </div>
+      <div class="panel-body">
+        <p style="font-size:0.82rem; color:var(--muted); margin-bottom:1rem;">
+          Selecciona un token para ver su autómata y la tabla de transición de estados que lo reconoce.
+        </p>
+
+        <div class="afd-tabs" id="afdTabs"></div>
+
+        <div class="automata-diagram" id="diagramaAutomata" style="margin-bottom:1.2rem;">
+          <span style="color:var(--muted); font-size:0.8rem;">Selecciona un token arriba para ver su AFD</span>
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table class="transition-table" id="tablaTransicion"></table>
+        </div>
+
+        <div class="sim-controls" style="margin-top:1.2rem;">
+          <select id="simSelectToken"></select>
+          <button class="btn-copy" style="margin-top:0;" onclick="iniciarSimulacion()">▶ Simular cadena</button>
+        </div>
+        <div class="sim-log" id="simLog">Esperando simulación...</div>
+      </div>
+    </div>
+
+    <!-- PASO 6: GRAMÁTICA LIBRE DE CONTEXTO -->
     <div class="panel hidden" id="panelGramatica">
       <div class="panel-header">
-        <div class="panel-dot" style="background: #f59e0b;"></div>
-        Gramática formal (BNF) del CSV analizado
+        <span class="step-tag">6</span>
+        <div class="panel-dot" style="background: #fbbf24;"></div>
+        Gramática libre de contexto (BNF) del CSV analizado
       </div>
       <div class="panel-body">
         <p style="font-size:0.82rem; color:var(--muted); margin-bottom:1rem;">
           Reglas de producción que definen la estructura válida del CSV de TechStore Perú.
         </p>
-        <pre style="font-family:'JetBrains Mono',monospace; font-size:0.78rem; line-height:1.9; background:var(--token-bg); padding:1.2rem; border-radius:10px; border:1px solid var(--border); overflow-x:auto; color:#94a3b8;"><span style="color:#f59e0b;">&lt;csv&gt;</span>           ::= <span style="color:#a78bfa;">&lt;encabezado&gt;</span> <span style="color:#a78bfa;">&lt;filas&gt;</span>
+        <pre style="font-family:'JetBrains Mono',monospace; font-size:0.78rem; line-height:1.9; background:var(--token-bg); padding:1.2rem; border-radius:10px; border:1px solid var(--border); overflow-x:auto; color:#94a3b8;"><span style="color:#fbbf24;">&lt;csv&gt;</span>           ::= <span style="color:#a78bfa;">&lt;encabezado&gt;</span> <span style="color:#a78bfa;">&lt;filas&gt;</span>
 <span style="color:#a78bfa;">&lt;encabezado&gt;</span>    ::= <span style="color:#60a5fa;">&lt;celda&gt;</span> "," <span style="color:#60a5fa;">&lt;celda&gt;</span> "," <span style="color:#60a5fa;">&lt;celda&gt;</span> "," <span style="color:#60a5fa;">&lt;celda&gt;</span> "," <span style="color:#60a5fa;">&lt;celda&gt;</span>
 <span style="color:#a78bfa;">&lt;filas&gt;</span>         ::= <span style="color:#a78bfa;">&lt;fila&gt;</span> | <span style="color:#a78bfa;">&lt;fila&gt;</span> <span style="color:#a78bfa;">&lt;filas&gt;</span>
 <span style="color:#a78bfa;">&lt;fila&gt;</span>          ::= <span style="color:#60a5fa;">&lt;valor&gt;</span> "," <span style="color:#60a5fa;">&lt;valor&gt;</span> "," <span style="color:#60a5fa;">&lt;valor&gt;</span> "," <span style="color:#60a5fa;">&lt;valor&gt;</span> "," <span style="color:#60a5fa;">&lt;valor&gt;</span>
 <span style="color:#60a5fa;">&lt;valor&gt;</span>         ::= <span style="color:#a3e635;">TEXT_VALUE</span> | <span style="color:#60a5fa;">NUMERIC_VALUE</span> | <span style="color:#34d399;">VALUE_DATE</span> | <span style="color:#f59e0b;">NULL_VALUE</span> | <span style="color:#ef4444;">INVALID_VALUE</span>
 
-<span style="color:#94a3b8;">--- Expresiones regulares (gramática regular, Tipo 3) ---</span>
+<span style="color:#94a3b8;">--- Cada token, a su vez, es definido por una gramática regular (Tipo 3) ---</span>
 <span style="color:#a3e635;">TEXT_VALUE</span>      ::= [a-zA-ZáéíóúÁÉÍÓÚñÑüÜ][a-zA-Z0-9 _\-\.@]*
 <span style="color:#60a5fa;">NUMERIC_VALUE</span>   ::= \d+(\.\d+)?
 <span style="color:#34d399;">VALUE_DATE</span>      ::= \d{4}-\d{2}-\d{2}
@@ -775,9 +999,10 @@
       </div>
     </div>
 
-    <!-- PANEL: ÁRBOL DE DERIVACIÓN -->
+    <!-- PASO 7: ÁRBOL DE DERIVACIÓN -->
     <div class="panel hidden" id="panelArbol">
       <div class="panel-header">
+        <span class="step-tag">7</span>
         <div class="panel-dot" style="background: #a78bfa;"></div>
         Árbol de derivación
       </div>
@@ -797,32 +1022,29 @@
       </div>
     </div>
 
-    <div class="panel hidden" id="panelSimulador">
+    <!-- PASO 8: SQL GENERADO -->
+    <div class="panel hidden" id="panelSQL">
       <div class="panel-header">
-        <div class="panel-dot" style="background: var(--accent);"></div>
-        Simulador Visual de Autómatas (AFD)
+        <span class="step-tag">8</span>
+        <div class="panel-dot" style="background: var(--accent2);"></div>
+        Sentencias SQL Server generadas
       </div>
       <div class="panel-body">
         <p style="font-size:0.82rem; color:var(--muted); margin-bottom:1rem;">
-          Selecciona uno de los tokens detectados en el CSV para ver cómo el analizador léxico procesa la cadena carácter por carácter a través de sus estados.
+          Solo se generan INSERT para las filas <strong style="color:var(--success);">sin errores</strong>.
+          Las filas inválidas son omitidas automáticamente. Incluye <code style="color:var(--accent);">USE</code>
+          y <code style="color:var(--accent);">GO</code> para ejecución directa en SQL Server.
         </p>
-        
-        <div class="sim-controls">
-          <select id="simSelectToken">
-            </select>
-          <button class="btn-copy" style="margin-top:0;" onclick="iniciarSimulacion()">▶ Iniciar Simulación</button>
-        </div>
-
-        <div class="automata-diagram" id="diagramaAutomata">
-          <span style="color:var(--muted); font-size:0.8rem;">Selecciona un token para renderizar el AFD</span>
-        </div>
-
-        <div class="sim-log" id="simLog">Esperando simulación...</div>
+        <div class="sql-block" id="sqlBlock"></div>
+        <button class="btn-copy" onclick="copiarSQL()">📋 Copiar SQL</button>
       </div>
     </div>
 
-
-  </main>
+    <!-- Estado inicial vacío -->
+    <div class="empty-state" id="emptyState">
+      <div class="big-icon">📋</div>
+      <p>Sube el CSV de compras de <strong>TechStore Perú</strong> y presiona <strong>Analizar</strong>.<br><small style="color:var(--muted);">Formato requerido: id_compra, proveedor, objeto, monto, fecha (5 columnas)</small></p>
+    </div>
 
 
   <!-- ── JAVASCRIPT (lógica del frontend) ── -->
@@ -1038,6 +1260,37 @@
         panelTokens.classList.remove("hidden");
       }
 
+      // ── Expresiones regulares por token (Paso 4) ──
+      const regexDefs = {
+        TEXT_VALUE:    { regex: "[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ][a-zA-Z0-9 _\\-\\.@]*", desc: "Letra inicial seguida de letras, dígitos, espacio o @ . _ -", color: "#a3e635" },
+        NUMERIC_VALUE: { regex: "\\d+(\\.\\d+)?", desc: "Uno o más dígitos, con parte decimal opcional", color: "#60a5fa" },
+        VALUE_DATE:    { regex: "\\d{4}-\\d{2}-\\d{2}", desc: "Año (4 dígitos), guion, mes (2), guion, día (2)", color: "#34d399" },
+        NULL_VALUE:    { regex: "^$", desc: "Cadena vacía (celda sin contenido)", color: "#f59e0b" },
+        INVALID_VALUE: { regex: "(no coincide con ningún patrón anterior)", desc: "Cualquier valor que no encaje en los patrones válidos", color: "#ef4444" }
+      };
+
+      const regexGrid = document.getElementById("regexGrid");
+      regexGrid.innerHTML = "";
+
+      if (data.conteo_tokens) {
+        // Solo mostramos las tarjetas de tokens que realmente aparecieron en el CSV
+        Object.entries(data.conteo_tokens).forEach(([token, lexemas]) => {
+          if (lexemas.length === 0) return;
+          const def = regexDefs[token];
+          if (!def) return;
+          regexGrid.innerHTML += `
+            <div class="regex-card">
+              <span class="rc-name" style="color:${def.color};">${token}</span>
+              <span class="rc-pattern">${escaparHTML(def.regex)}</span>
+              <span class="rc-desc">${def.desc}</span>
+            </div>`;
+        });
+        document.getElementById("panelRegex").classList.remove("hidden");
+      }
+
+      // ── AFD y tabla de transición (Paso 5) ──
+      construirPestanasAFD(data.conteo_tokens);
+
       // ── Gramática BNF ──
       // Siempre la mostramos porque es fija (describe las reglas del programa)
       document.getElementById("panelGramatica").classList.remove("hidden");
@@ -1057,7 +1310,7 @@
     // ─── Resalta palabras clave SQL con colores ───
     function resaltarSQL(sql) {
       return escaparHTML(sql)
-        .replace(/\b(INSERT INTO|VALUES|NULL)\b/g, '<span class="sql-kw">$1</span>')
+        .replace(/\b(USE|GO|INSERT INTO|VALUES|NULL)\b/g, '<span class="sql-kw">$1</span>')
         .replace(/'([^']*)'/g, "'<span class=\"sql-val\">$1</span>'");
     }
 
@@ -1179,69 +1432,167 @@
     }
 
 
-    // ─── LÓGICA DEL SIMULADOR DE AUTÓMATAS ───
+    // ─── LÓGICA DEL AFD: PESTAÑAS + TABLA DE TRANSICIÓN + SIMULADOR ───
 
-    // 1. Intervenir la función mostrarResultados para llenar el selector
-    const originalMostrarResultados = mostrarResultados;
-    mostrarResultados = function(data) {
-      originalMostrarResultados(data); // Ejecuta todo lo original
-      
-      const select = document.getElementById("simSelectToken");
-      select.innerHTML = "";
-      let opcionesAgregadas = 0;
-
-      // Recorremos los tokens y agregamos las opciones válidas al select
-      if(data.conteo_tokens) {
-        ['VALUE_DATE', 'TEXT_VALUE'].forEach(tipo => {
-          if(data.conteo_tokens[tipo]) {
-            // Tomamos solo valores únicos para no repetir
-            const unicos = [...new Set(data.conteo_tokens[tipo])];
-            unicos.slice(0, 5).forEach(lexema => { // Limitamos a 5 de cada uno por limpieza
-              const opt = document.createElement("option");
-              opt.value = JSON.stringify({tipo: tipo, lexema: lexema});
-              opt.textContent = `[${tipo}] - "${lexema}"`;
-              select.appendChild(opt);
-              opcionesAgregadas++;
-            });
-          }
-        });
-      }
-
-      const panelSimulador = document.getElementById("panelSimulador");
-      if(opcionesAgregadas > 0) {
-        panelSimulador.classList.remove("hidden");
-        prepararDiagrama(); // Dibuja el primer autómata
-      } else {
-        panelSimulador.classList.add("hidden");
+    // Definición de estados y transiciones de cada autómata (reflejan el código Python)
+    const AFD_DEFS = {
+      VALUE_DATE: {
+        estados: Array.from({length: 11}, (_, i) => `q${i}`),
+        aceptacion: ["q10"],
+        // Construye la tabla de transición estado→{símbolo: estado siguiente}
+        filas: [0,1,2,3].map(q => ({ estado: `q${q}`, dígito: `q${q+1}`, "-": "muerto" }))
+          .concat([{ estado: "q4", dígito: "muerto", "-": "q5" }])
+          .concat([5,6].map(q => ({ estado: `q${q}`, dígito: `q${q+1}`, "-": "muerto" })))
+          .concat([{ estado: "q7", dígito: "muerto", "-": "q8" }])
+          .concat([8,9].map(q => ({ estado: `q${q}`, dígito: `q${q+1}`, "-": "muerto" })))
+          .concat([{ estado: "q10", dígito: "muerto", "-": "muerto" }]),
+        columnas: ["estado", "dígito", "-"]
+      },
+      TEXT_VALUE: {
+        estados: ["q0", "q1"],
+        aceptacion: ["q1"],
+        filas: [
+          { estado: "q0", letra: "q1", "otro válido": "muerto", "carácter ilegal": "muerto" },
+          { estado: "q1", letra: "q1", "otro válido": "q1", "carácter ilegal": "muerto" }
+        ],
+        columnas: ["estado", "letra", "otro válido", "carácter ilegal"]
+      },
+      NUMERIC_VALUE: {
+        estados: ["q0 (entero)", "q1 (punto)", "q2 (decimal)"],
+        aceptacion: ["q0 (entero)", "q2 (decimal)"],
+        filas: [
+          { estado: "q0 (entero)", dígito: "q0 (entero)", ".": "q1 (punto)" },
+          { estado: "q1 (punto)", dígito: "q2 (decimal)", ".": "muerto" },
+          { estado: "q2 (decimal)", dígito: "q2 (decimal)", ".": "muerto" }
+        ],
+        columnas: ["estado", "dígito", "."]
+      },
+      NULL_VALUE: {
+        estados: ["q0"],
+        aceptacion: ["q0"],
+        filas: [{ estado: "q0", "cadena vacía": "q0 (aceptado de inmediato)" }],
+        columnas: ["estado", "cadena vacía"]
       }
     };
 
-    // 2. Preparar el diagrama HTML según el tipo de autómata
-    document.getElementById("simSelectToken").addEventListener("change", prepararDiagrama);
+    // Renderiza la tabla de transición HTML a partir de una definición AFD
+    function renderTablaTransicion(def) {
+      const tabla = document.getElementById("tablaTransicion");
+      let html = "<thead><tr>";
+      def.columnas.forEach(c => html += `<th>${c === "estado" ? "Estado" : c}</th>`);
+      html += "</tr></thead><tbody>";
 
-    function prepararDiagrama() {
-      const selection = JSON.parse(document.getElementById("simSelectToken").value);
+      def.filas.forEach(fila => {
+        const esAceptacion = def.aceptacion.includes(fila.estado);
+        html += `<tr class="${esAceptacion ? 'accept-row' : ''}">`;
+        def.columnas.forEach(c => {
+          if (c === "estado") {
+            html += `<td class="state-cell">${fila.estado}</td>`;
+          } else {
+            const destino = fila[c] || "muerto";
+            const esMuerto = destino === "muerto";
+            html += `<td class="${esMuerto ? 'dead' : ''}">${destino}</td>`;
+          }
+        });
+        html += "</tr>";
+      });
+      html += "</tbody>";
+      tabla.innerHTML = html;
+    }
+
+    // Dibuja el diagrama circular de estados (nodos + flechas) para un token
+    function prepararDiagrama(tipo) {
       const diagram = document.getElementById("diagramaAutomata");
       diagram.innerHTML = "";
-      
-      if(selection.tipo === "VALUE_DATE") {
-        // Genera 11 nodos (q0 a q10)
-        for(let i = 0; i <= 10; i++) {
+
+      if (tipo === "VALUE_DATE") {
+        for (let i = 0; i <= 10; i++) {
           diagram.innerHTML += `<div class="state-node ${i===10 ? 'accept' : ''}" id="q${i}">q${i}</div>`;
-          if(i < 10) diagram.innerHTML += `<div class="transition-arrow"></div>`;
+          if (i < 10) diagram.innerHTML += `<div class="transition-arrow"></div>`;
         }
-      } else if (selection.tipo === "TEXT_VALUE") {
-        // Genera 2 nodos (q0 y q1)
+      } else if (tipo === "TEXT_VALUE") {
         diagram.innerHTML += `<div class="state-node" id="q0">q0</div>`;
         diagram.innerHTML += `<div class="transition-arrow"></div>`;
         diagram.innerHTML += `<div class="state-node accept" id="q1">q1</div>`;
+      } else if (tipo === "NUMERIC_VALUE") {
+        diagram.innerHTML += `<div class="state-node accept" id="q0">q0</div>`;
+        diagram.innerHTML += `<div class="transition-arrow"></div>`;
+        diagram.innerHTML += `<div class="state-node" id="q1">q1</div>`;
+        diagram.innerHTML += `<div class="transition-arrow"></div>`;
+        diagram.innerHTML += `<div class="state-node accept" id="q2">q2</div>`;
+      } else if (tipo === "NULL_VALUE") {
+        diagram.innerHTML += `<div class="state-node accept" id="q0">q0</div>`;
       }
-      document.getElementById("simLog").innerHTML = "Diagrama cargado. Presiona 'Iniciar Simulación'.";
     }
 
-    // 3. Ejecutar la simulación con retardos (Timeouts)
+    // Cambia de pestaña AFD: redibuja diagrama + tabla + repuebla el selector de lexemas
+    let afdActivo = null;
+    function seleccionarAFD(tipo, conteoTokens) {
+      afdActivo = tipo;
+
+      // Resaltamos la pestaña activa
+      document.querySelectorAll(".afd-tab").forEach(t => {
+        t.classList.toggle("active", t.dataset.tipo === tipo);
+      });
+
+      prepararDiagrama(tipo);
+      renderTablaTransicion(AFD_DEFS[tipo]);
+
+      // Repoblamos el selector de lexemas reales encontrados en el CSV para ese token
+      const select = document.getElementById("simSelectToken");
+      select.innerHTML = "";
+      const lexemas = (conteoTokens && conteoTokens[tipo]) ? [...new Set(conteoTokens[tipo])] : [];
+
+      if (lexemas.length === 0) {
+        const opt = document.createElement("option");
+        opt.textContent = "Sin lexemas de este tipo en el CSV";
+        opt.disabled = true;
+        select.appendChild(opt);
+      } else {
+        lexemas.slice(0, 8).forEach(lexema => {
+          const opt = document.createElement("option");
+          opt.value = JSON.stringify({ tipo, lexema });
+          opt.textContent = `"${lexema || '(vacío)'}"`;
+          select.appendChild(opt);
+        });
+      }
+
+      document.getElementById("simLog").innerHTML = "AFD cargado. Selecciona un lexema y presiona 'Simular cadena'.";
+    }
+
+    // Construye las pestañas de tokens disponibles según lo que haya en el CSV
+    function construirPestanasAFD(conteoTokens) {
+      const tabs = document.getElementById("afdTabs");
+      tabs.innerHTML = "";
+
+      const tiposConDatos = Object.keys(AFD_DEFS).filter(
+        t => conteoTokens && conteoTokens[t] && conteoTokens[t].length > 0
+      );
+
+      if (tiposConDatos.length === 0) {
+        tabs.innerHTML = `<span style="color:var(--muted); font-size:0.8rem;">No hay tokens válidos para mostrar su AFD.</span>`;
+        document.getElementById("panelAFD").classList.add("hidden");
+        return;
+      }
+
+      tiposConDatos.forEach(tipo => {
+        const btn = document.createElement("div");
+        btn.className = "afd-tab";
+        btn.dataset.tipo = tipo;
+        btn.textContent = tipo;
+        btn.onclick = () => seleccionarAFD(tipo, conteoTokens);
+        tabs.appendChild(btn);
+      });
+
+      document.getElementById("panelAFD").classList.remove("hidden");
+      seleccionarAFD(tiposConDatos[0], conteoTokens);
+    }
+
+    // Ejecuta la simulación carácter por carácter sobre el lexema elegido
     async function iniciarSimulacion() {
-      const selection = JSON.parse(document.getElementById("simSelectToken").value);
+      const selectEl = document.getElementById("simSelectToken");
+      if (!selectEl.value) return;
+      const selection = JSON.parse(selectEl.value);
       const lexema = selection.lexema;
       const log = document.getElementById("simLog");
       
@@ -1251,28 +1602,35 @@
       log.innerHTML = `Analizando: "${lexema}"<br>`;
       
       // Resalta q0
-      document.getElementById(`q0`).classList.add('active');
+      document.getElementById(`q0`)?.classList.add('active');
 
       const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-      for(let i = 0; i < lexema.length; i++) {
-        await sleep(600); // 600ms entre cada carácter
+      // Caso especial: cadena vacía (NULL_VALUE) se acepta de inmediato
+      if (lexema === "") {
+        await sleep(400);
+        log.innerHTML += `<br><span style="color:#10b981; font-weight:bold;">✓ CADENA VACÍA ACEPTADA (NULL_VALUE)</span>`;
+        return;
+      }
+
+      for (let i = 0; i < lexema.length; i++) {
+        await sleep(500); // 500ms entre cada carácter
         const char = lexema[i];
         const logLine = `-> Lee '${char}': `;
         
-        document.getElementById(`q${estadoActual}`).classList.remove('active');
+        document.getElementById(`q${estadoActual}`)?.classList.remove('active');
 
         // Lógica replicada para VALUE_DATE
-        if(selection.tipo === "VALUE_DATE") {
+        if (selection.tipo === "VALUE_DATE") {
           let transicionValida = false;
-          if([0,1,2,3,5,6,8,9].includes(estadoActual) && !isNaN(char) && char.trim() !== '') {
+          if ([0,1,2,3,5,6,8,9].includes(estadoActual) && !isNaN(char) && char.trim() !== '') {
             estadoActual++; transicionValida = true;
-          } else if([4,7].includes(estadoActual) && char === '-') {
+          } else if ([4,7].includes(estadoActual) && char === '-') {
             estadoActual++; transicionValida = true;
           }
 
-          if(!transicionValida) {
-            log.innerHTML += `${logLine} <span style="color:red">Error sintáctico. Pasa a estado muerto.</span><br>`;
+          if (!transicionValida) {
+            log.innerHTML += `${logLine} <span style="color:#ef4444;">Transición no definida. Pasa a estado muerto.</span><br>`;
             return;
           }
         } 
@@ -1281,36 +1639,53 @@
           const letras = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZáéíóúÁÉÍÓÚñÑüÜ";
           const todos = letras + "0123456789 _-.@";
           
-          if(estadoActual === 0) {
-            if(letras.includes(char)) estadoActual = 1;
-            else { log.innerHTML += `${logLine} <span style="color:red">Carácter inicial inválido.</span><br>`; return; }
+          if (estadoActual === 0) {
+            if (letras.includes(char)) estadoActual = 1;
+            else { log.innerHTML += `${logLine} <span style="color:#ef4444;">Carácter inicial inválido.</span><br>`; return; }
           } else if (estadoActual === 1) {
-            if(!todos.includes(char)) {
-              log.innerHTML += `${logLine} <span style="color:red">Carácter ilegal.</span><br>`;
-              document.getElementById(`q1`).classList.add('error');
+            if (!todos.includes(char)) {
+              log.innerHTML += `${logLine} <span style="color:#ef4444;">Carácter ilegal.</span><br>`;
+              document.getElementById(`q1`)?.classList.add('error');
               return;
             }
             // Se mantiene en q1 (bucle)
           }
         }
+        // Lógica para NUMERIC_VALUE: q0 dígitos enteros, '.' pasa a q1, luego q2 decimales
+        else if (selection.tipo === "NUMERIC_VALUE") {
+          const esDigito = !isNaN(char) && char.trim() !== '';
+          if (estadoActual === 0) {
+            if (esDigito) estadoActual = 0;
+            else if (char === '.') estadoActual = 1;
+            else { log.innerHTML += `${logLine} <span style="color:#ef4444;">Carácter no numérico.</span><br>`; return; }
+          } else if (estadoActual === 1) {
+            if (esDigito) estadoActual = 2;
+            else { log.innerHTML += `${logLine} <span style="color:#ef4444;">Se esperaba un dígito decimal.</span><br>`; return; }
+          } else if (estadoActual === 2) {
+            if (esDigito) estadoActual = 2;
+            else { log.innerHTML += `${logLine} <span style="color:#ef4444;">Carácter no numérico.</span><br>`; return; }
+          }
+        }
 
         // Actualizar visual
         const nodoNuevo = document.getElementById(`q${estadoActual}`);
-        if(nodoNuevo) nodoNuevo.classList.add('active');
-        log.innerHTML += `${logLine} <span style="color:yellow">Pasa al estado q${estadoActual}</span><br>`;
+        if (nodoNuevo) nodoNuevo.classList.add('active');
+        log.innerHTML += `${logLine} <span style="color:#fbbf24;">Pasa al estado q${estadoActual}</span><br>`;
       }
 
-      await sleep(600);
+      await sleep(500);
       
       // Comprobación final de aceptación
-      const esAceptado = (selection.tipo === "VALUE_DATE" && estadoActual === 10) || 
-                        (selection.tipo === "TEXT_VALUE" && estadoActual === 1);
+      const esAceptado =
+        (selection.tipo === "VALUE_DATE" && estadoActual === 10) ||
+        (selection.tipo === "TEXT_VALUE" && estadoActual === 1) ||
+        (selection.tipo === "NUMERIC_VALUE" && (estadoActual === 0 || estadoActual === 2));
       
-      if(esAceptado) {
+      if (esAceptado) {
         log.innerHTML += `<br><span style="color:#10b981; font-weight:bold;">✓ CADENA ACEPTADA</span>`;
       } else {
-        document.getElementById(`q${estadoActual}`).classList.add('error');
-        log.innerHTML += `<br><span style="color:#ef4444; font-weight:bold;">✗ CADENA RECHAZADA (No terminó en estado de aceptación)</span>`;
+        document.getElementById(`q${estadoActual}`)?.classList.add('error');
+        log.innerHTML += `<br><span style="color:#ef4444; font-weight:bold;">✗ CADENA RECHAZADA (no terminó en estado de aceptación)</span>`;
       }
     }
 

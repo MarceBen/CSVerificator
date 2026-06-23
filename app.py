@@ -110,6 +110,10 @@ def generar_sql(tabla, encabezado, filas_datos, filas_invalidas_idx):
  
     sentencias = []
 
+    # Encabezado T-SQL: selecciona la base de datos antes de insertar (USE + GO)
+    sentencias.append(f"USE TechStorePeru;")
+    sentencias.append("GO")
+
     # Construimos la parte fija: INSERT INTO tabla (col1, col2, ...)
     columnas = ", ".join(encabezado)
 
@@ -142,6 +146,9 @@ def generar_sql(tabla, encabezado, filas_datos, filas_invalidas_idx):
         valores_str = ", ".join(valores)
         sentencia = f"INSERT INTO {tabla} ({columnas}) VALUES ({valores_str});"
         sentencias.append(sentencia)
+
+    # Cierre por lotes en T-SQL Server (separa el batch de inserciones)
+    sentencias.append("GO")
 
     return sentencias
 
