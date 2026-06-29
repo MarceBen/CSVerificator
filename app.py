@@ -197,15 +197,14 @@ def generar_sql(tabla, encabezado, filas_datos, filas_invalidas_idx):
 
 
 # --- GENERACIÓN DEL ÁRBOL DE DERIVACIÓN ---
-# Construye un árbol JSON con la estructura gramatical del CSV analizado
+# Construye 2 arboles de derivación: uno para el encabezado y otro para las filas, pero solo muestra 2 tokens por fila para no saturar la visualización.
 def generar_arbol(encabezado, filas_datos, resultados_lexicos):
 
-    # Nodo raíz: CSV
+    # Nodo raíz
     arbol = {
         "nombre": "CSV",
         "hijos": [
             {
-                # Primer hijo: ENCABEZADO con cada columna como terminal
                 "nombre": "ENCABEZADO",
                 "hijos": [
                     {"nombre": col.strip(), "hijos": [], "es_terminal": True}
@@ -214,7 +213,6 @@ def generar_arbol(encabezado, filas_datos, resultados_lexicos):
                 "es_terminal": False
             },
             {
-                # Segundo hijo: FILAS (se llena abajo)
                 "nombre": "FILAS",
                 "hijos": [],
                 "es_terminal": False
@@ -225,16 +223,30 @@ def generar_arbol(encabezado, filas_datos, resultados_lexicos):
 
     nodo_filas = arbol["hijos"][1]
 
-    # Por cada fila de datos, creamos un nodo FILA con sus celdas
+    # Solo queremos mostrar 2 tokens
+    MAX_TOKENS = 2
+    contador = 0
+
+    # Recorremos las filas
     for resultado in resultados_lexicos:
+
+        # Si ya dibujamos 2 tokens, terminamos
+        if contador >= MAX_TOKENS:
+            break
+
         nodo_fila = {
             "nombre": f"FILA {resultado['numero_fila']}",
             "hijos": [],
             "es_terminal": False
         }
 
+        # Recorremos las celdas de la fila
         for celda in resultado["celdas"]:
-            # Cada celda tiene: nodo VALOR → nodo TOKEN → nodo LEXEMA (hoja)
+
+            # Si ya llegamos al límite, salimos
+            if contador >= MAX_TOKENS:
+                break
+
             nodo_valor = {
                 "nombre": "VALOR",
                 "hijos": [
@@ -245,7 +257,7 @@ def generar_arbol(encabezado, filas_datos, resultados_lexicos):
                                 "nombre": celda["valor"] if celda["valor"] != "" else "NULL",
                                 "hijos": [],
                                 "es_terminal": True,
-                                "es_lexema": True  # marca la hoja del árbol
+                                "es_lexema": True
                             }
                         ],
                         "es_terminal": True,
@@ -255,9 +267,13 @@ def generar_arbol(encabezado, filas_datos, resultados_lexicos):
                 ],
                 "es_terminal": False
             }
-            nodo_fila["hijos"].append(nodo_valor)
 
-        nodo_filas["hijos"].append(nodo_fila)
+            nodo_fila["hijos"].append(nodo_valor)
+            contador += 1
+
+        # Solo agregamos la fila si tiene hijos
+        if nodo_fila["hijos"]:
+            nodo_filas["hijos"].append(nodo_fila)
 
     return arbol
 
