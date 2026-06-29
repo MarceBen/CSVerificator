@@ -44,22 +44,64 @@ def automata_text_value(lexema):
             if char not in caracteres_secundarios: return False
     return estado == 1
 
+
+# Autómata para RUC peruano: 11 dígitos exactos (ej. 20553840024)
+def automata_ruc(lexema):
+    estado = 0
+    for char in lexema:
+        if estado in range(0, 11):
+            if char.isdigit(): estado += 1
+            else: return False
+        else:
+            return False  # más de 11 dígitos, se rechaza
+    return estado == 11
+
+
+# Autómata para código de boleta: letra + 3 dígitos + guion + 3 dígitos (ej. B001-246)
+def automata_codigo_boleta(lexema):
+    estado = 0
+    for char in lexema:
+        if estado == 0:
+            if char.isalpha(): estado = 1
+            else: return False
+        elif estado in [1, 2, 3]:
+            if char.isdigit(): estado += 1
+            else: return False
+        elif estado == 4:
+            if char == '-': estado = 5
+            else: return False
+        elif estado in [5, 6, 7]:
+            if char.isdigit(): estado += 1
+            else: return False
+        else:
+            return False
+    return estado == 8
+
 # --- FUNCION PRINCIPAL REFACTORIZADA ---
 def reconocer_token(valor):
     valor = valor.strip()
 
     if valor == "":
         return "NULL_VALUE"
-    
-    # 1. Evaluamos con el Autómata de Fechas
+
+    # 1. Evaluamos con el Autómata de RUC (11 dígitos exactos, va antes que NUMERIC
+    #    porque un RUC también es solo dígitos y debe reconocerse primero)
+    elif automata_ruc(valor):
+        return "RUC_VALUE"
+
+    # 2. Evaluamos con el Autómata de Código de Boleta (letra + dígitos + guion + dígitos)
+    elif automata_codigo_boleta(valor):
+        return "CODE_VALUE"
+
+    # 3. Evaluamos con el Autómata de Fechas
     elif automata_value_date(valor):
         return "VALUE_DATE"
-        
+
     # El numérico lo dejamos con regex porque no pediste su autómata (todavía)
     elif re.fullmatch(r'\d+(\.\d+)?', valor):
         return "NUMERIC_VALUE"
 
-    # 2. Evaluamos con el Autómata de Texto
+    # 4. Evaluamos con el Autómata de Texto
     elif automata_text_value(valor):
         return "TEXT_VALUE"
 
@@ -265,10 +307,10 @@ def analizar():
     encabezado = filas[0]
     filas_datos = filas[1:]  # El resto son los datos
 
-    # Validamos que el CSV tenga exactamente 5 columnas (estructura TechStore Peru)
-    # Las 5 columnas esperadas: id_compra, proveedor, objeto, monto, fecha
-    if len(encabezado) != 5:
-        return jsonify({"error": f"El CSV debe tener exactamente 5 columnas (id_compra, proveedor, objeto, monto, fecha). Se encontraron {len(encabezado)}."}), 400
+    # Validamos que el CSV tenga exactamente 7 columnas (estructura de boleta TechStore Peru)
+    # Las 7 columnas esperadas: ruc_emisor, codigo_boleta, cliente, descripcion, cantidad, monto, fecha
+    if len(encabezado) != 7:
+        return jsonify({"error": f"El CSV debe tener exactamente 7 columnas (ruc_emisor, codigo_boleta, cliente, descripcion, cantidad, monto, fecha). Se encontraron {len(encabezado)}."}), 400
 
     # --- ANÁLISIS LÉXICO (revisamos cada celda) ---
     resultados_lexicos = analizar_lexico(filas_datos)
@@ -297,7 +339,7 @@ def analizar():
     total_errores_lexicos = sum(len(r["errores_lexicos"]) for r in resultados_lexicos)
 
     # Contamos cuantos lexemas encontramos de cada token en todo el CSV
-    conteo_tokens = {"TEXT_VALUE": [], "NUMERIC_VALUE": [], "VALUE_DATE": [], "NULL_VALUE": [], "INVALID_VALUE": []}
+    conteo_tokens = {"TEXT_VALUE": [], "NUMERIC_VALUE": [], "VALUE_DATE": [], "RUC_VALUE": [], "CODE_VALUE": [], "NULL_VALUE": [], "INVALID_VALUE": []}
     for resultado in resultados_lexicos:
         for celda in resultado["celdas"]:
             token = celda["token"]

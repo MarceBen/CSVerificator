@@ -355,6 +355,8 @@
     .token-TEXT_VALUE    { color: #a3e635; }
     .token-NUMERIC_VALUE { color: #60a5fa; }
     .token-VALUE_DATE    { color: #34d399; }
+    .token-RUC_VALUE     { color: #22d3ee; }
+    .token-CODE_VALUE    { color: #c084fc; }
     .token-NULL_VALUE    { color: var(--warning); }
     .token-INVALID_VALUE { color: var(--danger); font-weight: 700; }
 
@@ -542,6 +544,37 @@
       font-weight: 700;
     }
 
+    /* ===== TOGGLE AFD / AFND ===== */
+    .modo-toggle {
+      display: inline-flex;
+      background: var(--token-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 1.2rem;
+      gap: 4px;
+    }
+
+    .modo-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      padding: 0.5rem 1rem;
+      border-radius: 7px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s;
+      font-weight: 600;
+    }
+
+    .modo-btn:hover { color: var(--text); }
+
+    .modo-btn.active {
+      background: var(--accent2);
+      color: white;
+    }
+
     .transition-table {
       width: 100%;
       border-collapse: collapse;
@@ -583,6 +616,12 @@
     .transition-table td.dead {
       color: var(--danger);
       opacity: 0.6;
+    }
+
+    .transition-table td.nd-cell {
+      color: #c084fc;
+      font-weight: 700;
+      background: rgba(192,132,252,0.08);
     }
 
     .regex-card {
@@ -732,7 +771,7 @@
   <header>
     <div class="logo-icon">CSV</div>
     <h1>CS<span>Verificator</span></h1>
-    <div class="badge-curso">TechStore Perú · Validador de compras CSV</div>
+    <div class="badge-curso">TechStore Perú · Validador de boletas CSV</div>
   </header>
 
   <!-- ── CONTENIDO PRINCIPAL ── -->
@@ -742,7 +781,7 @@
     <div class="intro-box">
       <div class="intro-eyebrow">Teoría de Computación · TechStore Perú</div>
       <p>
-        Solución informática capaz de procesar archivos CSV que contienen registros de compras,
+        Solución informática capaz de procesar archivos CSV que contienen registros de boletas de venta,
         aplicando técnicas propias de compiladores: análisis léxico, análisis sintáctico y generación
         de código. Como resultado, el sistema transforma los datos de entrada en sentencias
         <strong style="color:var(--accent);">SQL Server</strong> válidas, facilitando la automatización
@@ -783,7 +822,7 @@
           <!-- Nombre de tabla SQL -->
           <div class="form-group">
             <label>Nombre de tabla SQL (opcional)</label>
-            <input type="text" id="tablaNombre" placeholder="ej: empleados, ventas, usuarios" />
+            <input type="text" id="tablaNombre" placeholder="ej: boletas, ventas, comprobantes" />
           </div>
 
           <!-- Opción: generar SQL -->
@@ -814,17 +853,27 @@
 
       <div class="token-ref-row">
         <span class="token-ref-name" style="color:#a3e635;">TEXT_VALUE</span>
-        <span class="token-ref-examples">Juan<br>Lima<br>Activo</span>
+        <span class="token-ref-examples">Lenovo SAC<br>Laptop HP<br>Mouse</span>
       </div>
 
       <div class="token-ref-row">
         <span class="token-ref-name" style="color:#60a5fa;">NUMERIC_VALUE</span>
-        <span class="token-ref-examples">25<br>99.90<br>1500</span>
+        <span class="token-ref-examples">2<br>99.90<br>1500</span>
       </div>
 
       <div class="token-ref-row">
         <span class="token-ref-name" style="color:#34d399;">VALUE_DATE</span>
         <span class="token-ref-examples">2026-01-15<br>2000-07-04<br>1999-03-22</span>
+      </div>
+
+      <div class="token-ref-row">
+        <span class="token-ref-name" style="color:#22d3ee;">RUC_VALUE</span>
+        <span class="token-ref-examples">20553840024<br>10458963214</span>
+      </div>
+
+      <div class="token-ref-row">
+        <span class="token-ref-name" style="color:#c084fc;">CODE_VALUE</span>
+        <span class="token-ref-examples">B001-246<br>A999-001</span>
       </div>
 
       <div class="token-ref-row">
@@ -911,6 +960,8 @@
         <span class="legend-item"><span class="token-TEXT_VALUE">■</span> TEXT_VALUE</span>
         <span class="legend-item"><span class="token-NUMERIC_VALUE">■</span> NUMERIC_VALUE</span>
         <span class="legend-item"><span class="token-VALUE_DATE">■</span> VALUE_DATE</span>
+        <span class="legend-item"><span class="token-RUC_VALUE">■</span> RUC_VALUE</span>
+        <span class="legend-item"><span class="token-CODE_VALUE">■</span> CODE_VALUE</span>
         <span class="legend-item"><span class="token-NULL_VALUE">■</span> NULL_VALUE</span>
         <span class="legend-item"><span class="token-INVALID_VALUE">■</span> INVALID_VALUE</span>
       </div>
@@ -946,22 +997,30 @@
       </div>
     </div>
 
-    <!-- PASO 5: AFD CON TABLA DE TRANSICIÓN INTERACTIVA -->
+    <!-- PASO 5: AUTÓMATAS (AFD y AFND) CON TABLA DE TRANSICIÓN INTERACTIVA -->
     <div class="panel hidden" id="panelAFD">
       <div class="panel-header">
         <span class="step-tag">5</span>
         <div class="panel-dot" style="background: var(--accent);"></div>
-        Autómata Finito Determinista (AFD) y tabla de transición
+        Autómatas finitos y tabla de transición
       </div>
       <div class="panel-body">
         <p style="font-size:0.82rem; color:var(--muted); margin-bottom:1rem;">
-          Selecciona un token para ver su autómata y la tabla de transición de estados que lo reconoce.
+          Selecciona un token para ver su autómata. Alterna entre la versión <strong>determinista (AFD)</strong>,
+          la que realmente ejecuta el programa, y la versión <strong>no determinista (AFND)</strong> equivalente,
+          que admite más de una transición posible para el mismo símbolo.
         </p>
+
+        <!-- Toggle AFD / AFND -->
+        <div class="modo-toggle" id="modoToggle">
+          <button class="modo-btn active" data-modo="AFD" onclick="cambiarModoAutomata('AFD')">AFD (determinista)</button>
+          <button class="modo-btn" data-modo="AFND" onclick="cambiarModoAutomata('AFND')">AFND (no determinista)</button>
+        </div>
 
         <div class="afd-tabs" id="afdTabs"></div>
 
         <div class="automata-diagram" id="diagramaAutomata" style="margin-bottom:1.2rem;">
-          <span style="color:var(--muted); font-size:0.8rem;">Selecciona un token arriba para ver su AFD</span>
+          <span style="color:var(--muted); font-size:0.8rem;">Selecciona un token arriba para ver su autómata</span>
         </div>
 
         <div style="overflow-x:auto;">
@@ -988,10 +1047,10 @@
           Reglas de producción que definen la estructura válida del CSV de TechStore Perú.
         </p>
         <pre style="font-family:'JetBrains Mono',monospace; font-size:0.78rem; line-height:1.9; background:var(--token-bg); padding:1.2rem; border-radius:10px; border:1px solid var(--border); overflow-x:auto; color:#94a3b8;"><span style="color:#fbbf24;">&lt;csv&gt;</span>            ::= <span style="color:#a78bfa;">&lt;encabezado&gt;</span> <span style="color:#a78bfa;">&lt;filas&gt;</span>
-<span style="color:#a78bfa;">&lt;encabezado&gt;</span>     ::= <span style="color:#60a5fa;">&lt;celda&gt;</span> "," <span style="color:#60a5fa;">&lt;celda&gt;</span> "," <span style="color:#60a5fa;">&lt;celda&gt;</span> "," <span style="color:#60a5fa;">&lt;celda&gt;</span> "," <span style="color:#60a5fa;">&lt;celda&gt;</span>
+<span style="color:#a78bfa;">&lt;encabezado&gt;</span>     ::= <span style="color:#60a5fa;">&lt;celda&gt;</span> "," <span style="color:#60a5fa;">&lt;celda&gt;</span> "," <span style="color:#60a5fa;">&lt;celda&gt;</span> "," <span style="color:#60a5fa;">&lt;celda&gt;</span> "," <span style="color:#60a5fa;">&lt;celda&gt;</span> "," <span style="color:#60a5fa;">&lt;celda&gt;</span> "," <span style="color:#60a5fa;">&lt;celda&gt;</span>
 <span style="color:#a78bfa;">&lt;filas&gt;</span>          ::= <span style="color:#a78bfa;">&lt;fila&gt;</span> | <span style="color:#a78bfa;">&lt;fila&gt;</span> <span style="color:#a78bfa;">&lt;filas&gt;</span>
-<span style="color:#a78bfa;">&lt;fila&gt;</span>           ::= <span style="color:#60a5fa;">&lt;valor&gt;</span> "," <span style="color:#60a5fa;">&lt;valor&gt;</span> "," <span style="color:#60a5fa;">&lt;valor&gt;</span> "," <span style="color:#60a5fa;">&lt;valor&gt;</span> "," <span style="color:#60a5fa;">&lt;valor&gt;</span>
-<span style="color:#60a5fa;">&lt;valor&gt;</span>          ::= <span style="color:#a3e635;">&lt;texto&gt;</span> | <span style="color:#60a5fa;">&lt;numero&gt;</span> | <span style="color:#34d399;">&lt;fecha&gt;</span> | <span style="color:#f59e0b;">&lt;nulo&gt;</span>
+<span style="color:#a78bfa;">&lt;fila&gt;</span>           ::= <span style="color:#60a5fa;">&lt;valor&gt;</span> "," <span style="color:#60a5fa;">&lt;valor&gt;</span> "," <span style="color:#60a5fa;">&lt;valor&gt;</span> "," <span style="color:#60a5fa;">&lt;valor&gt;</span> "," <span style="color:#60a5fa;">&lt;valor&gt;</span> "," <span style="color:#60a5fa;">&lt;valor&gt;</span> "," <span style="color:#60a5fa;">&lt;valor&gt;</span>
+<span style="color:#60a5fa;">&lt;valor&gt;</span>          ::= <span style="color:#a3e635;">&lt;texto&gt;</span> | <span style="color:#60a5fa;">&lt;numero&gt;</span> | <span style="color:#34d399;">&lt;fecha&gt;</span> | <span style="color:#22d3ee;">&lt;ruc&gt;</span> | <span style="color:#c084fc;">&lt;codigo&gt;</span> | <span style="color:#f59e0b;">&lt;nulo&gt;</span>
 
 <span style="color:#94a3b8;">--- Producción de cada token como gramática libre de contexto (no como regex) ---</span>
 
@@ -1008,6 +1067,10 @@
 <span style="color:#34d399;">&lt;anio&gt;</span>           ::= <span style="color:#60a5fa;">&lt;digito&gt;</span> <span style="color:#60a5fa;">&lt;digito&gt;</span> <span style="color:#60a5fa;">&lt;digito&gt;</span> <span style="color:#60a5fa;">&lt;digito&gt;</span>
 <span style="color:#34d399;">&lt;mes&gt;</span>            ::= <span style="color:#60a5fa;">&lt;digito&gt;</span> <span style="color:#60a5fa;">&lt;digito&gt;</span>
 <span style="color:#34d399;">&lt;dia&gt;</span>            ::= <span style="color:#60a5fa;">&lt;digito&gt;</span> <span style="color:#60a5fa;">&lt;digito&gt;</span>
+
+<span style="color:#22d3ee;">&lt;ruc&gt;</span>            ::= <span style="color:#60a5fa;">&lt;digito&gt;</span><span style="color:#22d3ee;">{11}</span>   (11 producciones consecutivas de &lt;digito&gt;)
+
+<span style="color:#c084fc;">&lt;codigo&gt;</span>         ::= <span style="color:#a3e635;">&lt;letra&gt;</span> <span style="color:#60a5fa;">&lt;digito&gt;</span> <span style="color:#60a5fa;">&lt;digito&gt;</span> <span style="color:#60a5fa;">&lt;digito&gt;</span> "-" <span style="color:#60a5fa;">&lt;digito&gt;</span> <span style="color:#60a5fa;">&lt;digito&gt;</span> <span style="color:#60a5fa;">&lt;digito&gt;</span>
 
 <span style="color:#f59e0b;">&lt;nulo&gt;</span>           ::= ε   (cadena vacía, sin producción)
 
@@ -1062,7 +1125,7 @@
     <!-- Estado inicial vacío -->
     <div class="empty-state" id="emptyState">
       <div class="big-icon">📋</div>
-      <p>Sube el CSV de compras de <strong>TechStore Perú</strong> y presiona <strong>Analizar</strong>.<br><small style="color:var(--muted);">Formato requerido: id_compra, proveedor, objeto, monto, fecha (5 columnas)</small></p>
+      <p>Sube el CSV de boletas de <strong>TechStore Perú</strong> y presiona <strong>Analizar</strong>.<br><small style="color:var(--muted);">Formato requerido: ruc_emisor, codigo_boleta, cliente, descripcion, cantidad, monto, fecha (7 columnas)</small></p>
     </div>
 
 
@@ -1252,6 +1315,8 @@
           TEXT_VALUE:    "#a3e635",
           NUMERIC_VALUE: "#60a5fa",
           VALUE_DATE:    "#34d399",
+          RUC_VALUE:     "#22d3ee",
+          CODE_VALUE:    "#c084fc",
           NULL_VALUE:    "#f59e0b",
           INVALID_VALUE: "#ef4444"
         };
@@ -1284,6 +1349,8 @@
         TEXT_VALUE:    { regex: "[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ][a-zA-Z0-9 _\\-\\.@]*", desc: "Letra inicial seguida de letras, dígitos, espacio o @ . _ -", color: "#a3e635" },
         NUMERIC_VALUE: { regex: "\\d+(\\.\\d+)?", desc: "Uno o más dígitos, con parte decimal opcional", color: "#60a5fa" },
         VALUE_DATE:    { regex: "\\d{4}-\\d{2}-\\d{2}", desc: "Año (4 dígitos), guion, mes (2), guion, día (2)", color: "#34d399" },
+        RUC_VALUE:     { regex: "\\d{11}", desc: "Exactamente 11 dígitos (RUC peruano)", color: "#22d3ee" },
+        CODE_VALUE:    { regex: "[A-Za-z]\\d{3}-\\d{3}", desc: "Letra de serie, 3 dígitos, guion, 3 dígitos del correlativo", color: "#c084fc" },
         NULL_VALUE:    { regex: "^$", desc: "Cadena vacía (celda sin contenido)", color: "#f59e0b" },
         INVALID_VALUE: { regex: "(no coincide con ningún patrón anterior)", desc: "Cualquier valor que no encaje en los patrones válidos", color: "#ef4444" }
       };
@@ -1512,50 +1579,189 @@
     }
 
 
-    // ─── LÓGICA DEL AFD: PESTAÑAS + TABLA DE TRANSICIÓN + SIMULADOR ───
+    // ═══════════════════════════════════════════════════════════════
+    //  AUTÓMATAS: DEFINICIONES AFD (determinista) Y AFND (no determinista)
+    //  Cada token trae ambas versiones para poder alternar con el toggle.
+    // ═══════════════════════════════════════════════════════════════
 
-    // Definición de estados y transiciones de cada autómata (reflejan el código Python)
+    let modoAutomata = "AFD"; // modo activo por defecto
+
     const AFD_DEFS = {
+
+      // ── VALUE_DATE: AAAA-MM-DD (10 caracteres, 11 estados q0..q10) ──
       VALUE_DATE: {
-        estados: Array.from({length: 11}, (_, i) => `q${i}`),
-        aceptacion: ["q10"],
-        // Construye la tabla de transición estado→{símbolo: estado siguiente}
-        filas: [0,1,2,3].map(q => ({ estado: `q${q}`, dígito: `q${q+1}`, "-": "muerto" }))
-          .concat([{ estado: "q4", dígito: "muerto", "-": "q5" }])
-          .concat([5,6].map(q => ({ estado: `q${q}`, dígito: `q${q+1}`, "-": "muerto" })))
-          .concat([{ estado: "q7", dígito: "muerto", "-": "q8" }])
-          .concat([8,9].map(q => ({ estado: `q${q}`, dígito: `q${q+1}`, "-": "muerto" })))
-          .concat([{ estado: "q10", dígito: "muerto", "-": "muerto" }]),
-        columnas: ["estado", "dígito", "-"]
+        AFD: {
+          estados: Array.from({length: 11}, (_, i) => `q${i}`),
+          aceptacion: ["q10"],
+          filas: [0,1,2,3].map(q => ({ estado: `q${q}`, dígito: `q${q+1}`, "-": "muerto" }))
+            .concat([{ estado: "q4", dígito: "muerto", "-": "q5" }])
+            .concat([5,6].map(q => ({ estado: `q${q}`, dígito: `q${q+1}`, "-": "muerto" })))
+            .concat([{ estado: "q7", dígito: "muerto", "-": "q8" }])
+            .concat([8,9].map(q => ({ estado: `q${q}`, dígito: `q${q+1}`, "-": "muerto" })))
+            .concat([{ estado: "q10", dígito: "muerto", "-": "muerto" }]),
+          columnas: ["estado", "dígito", "-"]
+        },
+        AFND: {
+          estados: ["q0", "q1a", "q1b", "q2", "q3", "q4", "q5", "q6", "q7", "q8", "q9", "q10"],
+          aceptacion: ["q10"],
+          filas: [
+            { estado: "q0",  dígito: "q1a, q1b", "-": "muerto" },
+            { estado: "q1a", dígito: "q2", "-": "muerto" },
+            { estado: "q1b", dígito: "q2", "-": "muerto" },
+            { estado: "q2",  dígito: "q3", "-": "muerto" },
+            { estado: "q3",  dígito: "q4", "-": "muerto" },
+            { estado: "q4",  dígito: "muerto", "-": "q5" },
+            { estado: "q5",  dígito: "q6", "-": "muerto" },
+            { estado: "q6",  dígito: "q7", "-": "muerto" },
+            { estado: "q7",  dígito: "muerto", "-": "q8" },
+            { estado: "q8",  dígito: "q9", "-": "muerto" },
+            { estado: "q9",  dígito: "q10", "-": "muerto" },
+            { estado: "q10", dígito: "muerto", "-": "muerto" }
+          ],
+          columnas: ["estado", "dígito", "-"]
+        }
       },
+
+      // ── TEXT_VALUE: letra inicial + (letra|dígito|símbolo)* (2 estados) ──
       TEXT_VALUE: {
-        estados: ["q0", "q1"],
-        aceptacion: ["q1"],
-        filas: [
-          { estado: "q0", letra: "q1", "otro válido": "muerto", "carácter ilegal": "muerto" },
-          { estado: "q1", letra: "q1", "otro válido": "q1", "carácter ilegal": "muerto" }
-        ],
-        columnas: ["estado", "letra", "otro válido", "carácter ilegal"]
+        AFD: {
+          estados: ["q0", "q1"],
+          aceptacion: ["q1"],
+          filas: [
+            { estado: "q0", letra: "q1", "otro válido": "muerto", "carácter ilegal": "muerto" },
+            { estado: "q1", letra: "q1", "otro válido": "q1", "carácter ilegal": "muerto" }
+          ],
+          columnas: ["estado", "letra", "otro válido", "carácter ilegal"]
+        },
+        AFND: {
+          estados: ["q0", "q1a", "q1b", "q2"],
+          aceptacion: ["q2"],
+          filas: [
+            { estado: "q0",  letra: "q1a, q1b", "otro válido": "muerto", "carácter ilegal": "muerto" },
+            { estado: "q1a", letra: "q2", "otro válido": "q2", "carácter ilegal": "muerto" },
+            { estado: "q1b", letra: "q2", "otro válido": "q2", "carácter ilegal": "muerto" },
+            { estado: "q2",  letra: "q2", "otro válido": "q2", "carácter ilegal": "muerto" }
+          ],
+          columnas: ["estado", "letra", "otro válido", "carácter ilegal"]
+        }
       },
+
+      // ── NUMERIC_VALUE: entero, o entero "." entero (3 estados) ──
       NUMERIC_VALUE: {
-        estados: ["q0 (entero)", "q1 (punto)", "q2 (decimal)"],
-        aceptacion: ["q0 (entero)", "q2 (decimal)"],
-        filas: [
-          { estado: "q0 (entero)", dígito: "q0 (entero)", ".": "q1 (punto)" },
-          { estado: "q1 (punto)", dígito: "q2 (decimal)", ".": "muerto" },
-          { estado: "q2 (decimal)", dígito: "q2 (decimal)", ".": "muerto" }
-        ],
-        columnas: ["estado", "dígito", "."]
+        AFD: {
+          estados: ["q0 (entero)", "q1 (punto)", "q2 (decimal)"],
+          aceptacion: ["q0 (entero)", "q2 (decimal)"],
+          filas: [
+            { estado: "q0 (entero)", dígito: "q0 (entero)", ".": "q1 (punto)" },
+            { estado: "q1 (punto)", dígito: "q2 (decimal)", ".": "muerto" },
+            { estado: "q2 (decimal)", dígito: "q2 (decimal)", ".": "muerto" }
+          ],
+          columnas: ["estado", "dígito", "."]
+        },
+        AFND: {
+          estados: ["q0", "q0b (acepta)", "q1 (punto)", "q2 (decimal)"],
+          aceptacion: ["q0b (acepta)", "q2 (decimal)"],
+          filas: [
+            { estado: "q0", dígito: "q0, q0b (acepta)", ".": "q1 (punto)" },
+            { estado: "q0b (acepta)", dígito: "q0, q0b (acepta)", ".": "q1 (punto)" },
+            { estado: "q1 (punto)", dígito: "q2 (decimal)", ".": "muerto" },
+            { estado: "q2 (decimal)", dígito: "q2 (decimal)", ".": "muerto" }
+          ],
+          columnas: ["estado", "dígito", "."]
+        }
       },
+
+      // ── RUC_VALUE: exactamente 11 dígitos (12 estados q0..q11) ──
+      RUC_VALUE: {
+        AFD: {
+          estados: Array.from({length: 12}, (_, i) => `q${i}`),
+          aceptacion: ["q11"],
+          filas: Array.from({length: 11}, (_, q) => ({ estado: `q${q}`, dígito: `q${q+1}` }))
+            .concat([{ estado: "q11", dígito: "muerto" }]),
+          columnas: ["estado", "dígito"]
+        },
+        AFND: {
+          estados: ["q0", "q1a", "q1b", "q2", "q3", "q4", "q5", "q6", "q7", "q8", "q9", "q10", "q11"],
+          aceptacion: ["q11"],
+          filas: [
+            { estado: "q0", dígito: "q1a, q1b" },
+            { estado: "q1a", dígito: "q2" },
+            { estado: "q1b", dígito: "q2" },
+          ].concat(Array.from({length: 9}, (_, i) => ({ estado: `q${i+2}`, dígito: `q${i+3}` })))
+            .concat([{ estado: "q11", dígito: "muerto" }]),
+          columnas: ["estado", "dígito"]
+        }
+      },
+
+      // ── CODE_VALUE: letra + 3 dígitos + guion + 3 dígitos (9 estados q0..q8) ──
+      CODE_VALUE: {
+        AFD: {
+          estados: Array.from({length: 9}, (_, i) => `q${i}`),
+          aceptacion: ["q8"],
+          filas: [
+            { estado: "q0", letra: "q1", dígito: "muerto", "-": "muerto" },
+            { estado: "q1", letra: "muerto", dígito: "q2", "-": "muerto" },
+            { estado: "q2", letra: "muerto", dígito: "q3", "-": "muerto" },
+            { estado: "q3", letra: "muerto", dígito: "q4", "-": "muerto" },
+            { estado: "q4", letra: "muerto", dígito: "muerto", "-": "q5" },
+            { estado: "q5", letra: "muerto", dígito: "q6", "-": "muerto" },
+            { estado: "q6", letra: "muerto", dígito: "q7", "-": "muerto" },
+            { estado: "q7", letra: "muerto", dígito: "q8", "-": "muerto" },
+            { estado: "q8", letra: "muerto", dígito: "muerto", "-": "muerto" }
+          ],
+          columnas: ["estado", "letra", "dígito", "-"]
+        },
+        AFND: {
+          estados: ["q0", "q0b", "q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8"],
+          aceptacion: ["q8"],
+          filas: [
+            { estado: "q0", letra: "q1", "ε": "q0b" },
+            { estado: "q0b", letra: "q1", "ε": "muerto" },
+            { estado: "q1", dígito: "q2" },
+            { estado: "q2", dígito: "q3" },
+            { estado: "q3", dígito: "q4" },
+            { estado: "q4", "-": "q5" },
+            { estado: "q5", dígito: "q6" },
+            { estado: "q6", dígito: "q7" },
+            { estado: "q7", dígito: "q8" },
+            { estado: "q8", dígito: "muerto" }
+          ],
+          columnas: ["estado", "letra", "dígito", "-", "ε"]
+        }
+      },
+
+      // ── NULL_VALUE: cadena vacía (1 estado, trivial: AFD = AFND) ──
       NULL_VALUE: {
-        estados: ["q0"],
-        aceptacion: ["q0"],
-        filas: [{ estado: "q0", "cadena vacía": "q0 (aceptado de inmediato)" }],
-        columnas: ["estado", "cadena vacía"]
+        AFD: {
+          estados: ["q0"],
+          aceptacion: ["q0"],
+          filas: [{ estado: "q0", "cadena vacía": "q0 (aceptado de inmediato)" }],
+          columnas: ["estado", "cadena vacía"]
+        },
+        AFND: {
+          estados: ["q0"],
+          aceptacion: ["q0"],
+          filas: [{ estado: "q0", "cadena vacía": "q0 (aceptado de inmediato)" }],
+          columnas: ["estado", "cadena vacía"]
+        }
       }
     };
 
-    // Renderiza la tabla de transición HTML a partir de una definición AFD
+
+    // ─── Cambia entre modo AFD y AFND, y refresca la vista del token activo ───
+    function cambiarModoAutomata(modo) {
+      modoAutomata = modo;
+      document.querySelectorAll(".modo-btn").forEach(b => {
+        b.classList.toggle("active", b.dataset.modo === modo);
+      });
+      if (afdActivo) {
+        renderTablaTransicion(AFD_DEFS[afdActivo][modoAutomata]);
+        prepararDiagrama(afdActivo, modoAutomata);
+      }
+    }
+
+
+    // ─── Renderiza la tabla de transición HTML a partir de una definición ───
     function renderTablaTransicion(def) {
       const tabla = document.getElementById("tablaTransicion");
       let html = "<thead><tr>";
@@ -1571,7 +1777,8 @@
           } else {
             const destino = fila[c] || "muerto";
             const esMuerto = destino === "muerto";
-            html += `<td class="${esMuerto ? 'dead' : ''}">${destino}</td>`;
+            const esMultiple = typeof destino === "string" && destino.includes(",");
+            html += `<td class="${esMuerto ? 'dead' : ''} ${esMultiple ? 'nd-cell' : ''}">${destino}</td>`;
           }
         });
         html += "</tr>";
@@ -1580,45 +1787,34 @@
       tabla.innerHTML = html;
     }
 
-    // Dibuja el diagrama circular de estados (nodos + flechas) para un token
-    function prepararDiagrama(tipo) {
+
+    // ─── Dibuja el diagrama circular de estados (nodos + flechas) ───
+    function prepararDiagrama(tipo, modo) {
       const diagram = document.getElementById("diagramaAutomata");
       diagram.innerHTML = "";
+      const def = AFD_DEFS[tipo][modo];
 
-      if (tipo === "VALUE_DATE") {
-        for (let i = 0; i <= 10; i++) {
-          diagram.innerHTML += `<div class="state-node ${i===10 ? 'accept' : ''}" id="q${i}">q${i}</div>`;
-          if (i < 10) diagram.innerHTML += `<div class="transition-arrow"></div>`;
-        }
-      } else if (tipo === "TEXT_VALUE") {
-        diagram.innerHTML += `<div class="state-node" id="q0">q0</div>`;
-        diagram.innerHTML += `<div class="transition-arrow"></div>`;
-        diagram.innerHTML += `<div class="state-node accept" id="q1">q1</div>`;
-      } else if (tipo === "NUMERIC_VALUE") {
-        diagram.innerHTML += `<div class="state-node accept" id="q0">q0</div>`;
-        diagram.innerHTML += `<div class="transition-arrow"></div>`;
-        diagram.innerHTML += `<div class="state-node" id="q1">q1</div>`;
-        diagram.innerHTML += `<div class="transition-arrow"></div>`;
-        diagram.innerHTML += `<div class="state-node accept" id="q2">q2</div>`;
-      } else if (tipo === "NULL_VALUE") {
-        diagram.innerHTML += `<div class="state-node accept" id="q0">q0</div>`;
-      }
+      def.estados.forEach((estado, i) => {
+        const esAceptacion = def.aceptacion.includes(estado);
+        const idEstado = `q${i}`;
+        diagram.innerHTML += `<div class="state-node ${esAceptacion ? 'accept' : ''}" id="${idEstado}" title="${estado}">${i}</div>`;
+        if (i < def.estados.length - 1) diagram.innerHTML += `<div class="transition-arrow"></div>`;
+      });
     }
 
-    // Cambia de pestaña AFD: redibuja diagrama + tabla + repuebla el selector de lexemas
+
+    // ─── Cambia de pestaña de token: redibuja diagrama + tabla + repuebla lexemas ───
     let afdActivo = null;
     function seleccionarAFD(tipo, conteoTokens) {
       afdActivo = tipo;
 
-      // Resaltamos la pestaña activa
       document.querySelectorAll(".afd-tab").forEach(t => {
         t.classList.toggle("active", t.dataset.tipo === tipo);
       });
 
-      prepararDiagrama(tipo);
-      renderTablaTransicion(AFD_DEFS[tipo]);
+      prepararDiagrama(tipo, modoAutomata);
+      renderTablaTransicion(AFD_DEFS[tipo][modoAutomata]);
 
-      // Repoblamos el selector de lexemas reales encontrados en el CSV para ese token
       const select = document.getElementById("simSelectToken");
       select.innerHTML = "";
       const lexemas = (conteoTokens && conteoTokens[tipo]) ? [...new Set(conteoTokens[tipo])] : [];
@@ -1637,10 +1833,11 @@
         });
       }
 
-      document.getElementById("simLog").innerHTML = "AFD cargado. Selecciona un lexema y presiona 'Simular cadena'.";
+      document.getElementById("simLog").innerHTML = "Autómata cargado. Selecciona un lexema y presiona 'Simular cadena'.";
     }
 
-    // Construye las pestañas de tokens disponibles según lo que haya en el CSV
+
+    // ─── Construye las pestañas de tokens disponibles según lo que haya en el CSV ───
     function construirPestanasAFD(conteoTokens) {
       const tabs = document.getElementById("afdTabs");
       tabs.innerHTML = "";
@@ -1650,7 +1847,7 @@
       );
 
       if (tiposConDatos.length === 0) {
-        tabs.innerHTML = `<span style="color:var(--muted); font-size:0.8rem;">No hay tokens válidos para mostrar su AFD.</span>`;
+        tabs.innerHTML = `<span style="color:var(--muted); font-size:0.8rem;">No hay tokens válidos para mostrar su autómata.</span>`;
         document.getElementById("panelAFD").classList.add("hidden");
         return;
       }
@@ -1668,25 +1865,24 @@
       seleccionarAFD(tiposConDatos[0], conteoTokens);
     }
 
-    // Ejecuta la simulación carácter por carácter sobre el lexema elegido
+
+    // ─── Ejecuta la simulación carácter por carácter (sobre la versión AFD,
+    //     que es la que realmente decide la aceptación en el programa) ───
     async function iniciarSimulacion() {
       const selectEl = document.getElementById("simSelectToken");
       if (!selectEl.value) return;
       const selection = JSON.parse(selectEl.value);
       const lexema = selection.lexema;
       const log = document.getElementById("simLog");
-      
-      // Reset visual
+
       document.querySelectorAll('.state-node').forEach(n => n.classList.remove('active', 'error'));
       let estadoActual = 0;
-      log.innerHTML = `Analizando: "${lexema}"<br>`;
-      
-      // Resalta q0
+      log.innerHTML = `Analizando: "${lexema}" (modo ${modoAutomata})<br>`;
+
       document.getElementById(`q0`)?.classList.add('active');
 
       const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-      // Caso especial: cadena vacía (NULL_VALUE) se acepta de inmediato
       if (lexema === "") {
         await sleep(400);
         log.innerHTML += `<br><span style="color:#10b981; font-weight:bold;">✓ CADENA VACÍA ACEPTADA (NULL_VALUE)</span>`;
@@ -1694,13 +1890,12 @@
       }
 
       for (let i = 0; i < lexema.length; i++) {
-        await sleep(500); // 500ms entre cada carácter
+        await sleep(500);
         const char = lexema[i];
         const logLine = `-> Lee '${char}': `;
-        
+
         document.getElementById(`q${estadoActual}`)?.classList.remove('active');
 
-        // Lógica replicada para VALUE_DATE
         if (selection.tipo === "VALUE_DATE") {
           let transicionValida = false;
           if ([0,1,2,3,5,6,8,9].includes(estadoActual) && !isNaN(char) && char.trim() !== '') {
@@ -1708,17 +1903,14 @@
           } else if ([4,7].includes(estadoActual) && char === '-') {
             estadoActual++; transicionValida = true;
           }
-
           if (!transicionValida) {
             log.innerHTML += `${logLine} <span style="color:#ef4444;">Transición no definida. Pasa a estado muerto.</span><br>`;
             return;
           }
-        } 
-        // Lógica replicada para TEXT_VALUE
+        }
         else if (selection.tipo === "TEXT_VALUE") {
           const letras = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZáéíóúÁÉÍÓÚñÑüÜ";
           const todos = letras + "0123456789 _-.@";
-          
           if (estadoActual === 0) {
             if (letras.includes(char)) estadoActual = 1;
             else { log.innerHTML += `${logLine} <span style="color:#ef4444;">Carácter inicial inválido.</span><br>`; return; }
@@ -1728,10 +1920,8 @@
               document.getElementById(`q1`)?.classList.add('error');
               return;
             }
-            // Se mantiene en q1 (bucle)
           }
         }
-        // Lógica para NUMERIC_VALUE: q0 dígitos enteros, '.' pasa a q1, luego q2 decimales
         else if (selection.tipo === "NUMERIC_VALUE") {
           const esDigito = !isNaN(char) && char.trim() !== '';
           if (estadoActual === 0) {
@@ -1746,21 +1936,43 @@
             else { log.innerHTML += `${logLine} <span style="color:#ef4444;">Carácter no numérico.</span><br>`; return; }
           }
         }
+        else if (selection.tipo === "RUC_VALUE") {
+          const esDigito = !isNaN(char) && char.trim() !== '';
+          if (esDigito && estadoActual < 11) estadoActual++;
+          else { log.innerHTML += `${logLine} <span style="color:#ef4444;">Se esperaba dígito (RUC debe tener 11).</span><br>`; return; }
+        }
+        else if (selection.tipo === "CODE_VALUE") {
+          const esDigito = !isNaN(char) && char.trim() !== '';
+          const esLetra = /[a-zA-Z]/.test(char);
+          if (estadoActual === 0) {
+            if (esLetra) estadoActual = 1;
+            else { log.innerHTML += `${logLine} <span style="color:#ef4444;">Se esperaba letra inicial.</span><br>`; return; }
+          } else if ([1,2,3].includes(estadoActual)) {
+            if (esDigito) estadoActual++;
+            else { log.innerHTML += `${logLine} <span style="color:#ef4444;">Se esperaba dígito de serie.</span><br>`; return; }
+          } else if (estadoActual === 4) {
+            if (char === '-') estadoActual = 5;
+            else { log.innerHTML += `${logLine} <span style="color:#ef4444;">Se esperaba guion.</span><br>`; return; }
+          } else if ([5,6,7].includes(estadoActual)) {
+            if (esDigito) estadoActual++;
+            else { log.innerHTML += `${logLine} <span style="color:#ef4444;">Se esperaba dígito de correlativo.</span><br>`; return; }
+          }
+        }
 
-        // Actualizar visual
         const nodoNuevo = document.getElementById(`q${estadoActual}`);
         if (nodoNuevo) nodoNuevo.classList.add('active');
         log.innerHTML += `${logLine} <span style="color:#fbbf24;">Pasa al estado q${estadoActual}</span><br>`;
       }
 
       await sleep(500);
-      
-      // Comprobación final de aceptación
+
       const esAceptado =
         (selection.tipo === "VALUE_DATE" && estadoActual === 10) ||
         (selection.tipo === "TEXT_VALUE" && estadoActual === 1) ||
-        (selection.tipo === "NUMERIC_VALUE" && (estadoActual === 0 || estadoActual === 2));
-      
+        (selection.tipo === "NUMERIC_VALUE" && (estadoActual === 0 || estadoActual === 2)) ||
+        (selection.tipo === "RUC_VALUE" && estadoActual === 11) ||
+        (selection.tipo === "CODE_VALUE" && estadoActual === 8);
+
       if (esAceptado) {
         log.innerHTML += `<br><span style="color:#10b981; font-weight:bold;">✓ CADENA ACEPTADA</span>`;
       } else {
@@ -1768,6 +1980,9 @@
         log.innerHTML += `<br><span style="color:#ef4444; font-weight:bold;">✗ CADENA RECHAZADA (no terminó en estado de aceptación)</span>`;
       }
     }
+
+
+
 
 
 
